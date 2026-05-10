@@ -270,6 +270,84 @@ resources:
 - Implement token revocation
 - Rate limit auth endpoints (constitution requirement)
 
+## Terraform CLI Login: OAuth 2.0 with PKCE
+
+**Decision**: Implement Terraform CLI login protocol using OAuth 2.0 Authorization Code flow with PKCE extension
+
+**Rationale**:
+- Required for `terraform login` command support (FR-017a)
+- PKCE (Proof Key for Code Exchange) protects against authorization code interception
+- OAuth 2.0 is standard protocol with well-tested implementations
+- Enables secure CLI authentication without embedding secrets in CLI
+- Terraform CLI expects specific OAuth endpoints and service discovery
+
+**Protocol Specification**:
+- Reference: `.specify/docs/login_protocol.md` (Terraform Login Protocol)
+- Reference: Terraform Remote Service Discovery (/.well-known/terraform.json)
+
+**Flow Design**:
+1. **Service Discovery**: Terraform CLI queries `/.well-known/terraform.json` to discover OAuth endpoints
+2. **Authorization Request**: CLI opens browser to `/oauth/authorization` with PKCE code_challenge
+3. **User Authentication**: User logs in via OIDC (reuses existing web UI auth)
+4. **Authorization Grant**: User approves Terraform CLI access
+5. **Code Exchange**: CLI exchanges authorization code for access token at `/oauth/token`
+6. **PKCE Validation**: Server validates code_verifier matches code_challenge
+7. **Token Issuance**: Server issues long-lived access token (no expiration)
+
+**Security Features**:
+- **PKCE**: Prevents authorization code interception attacks
+  - CLI generates random `code_verifier` (43-128 characters)
+  - Computes `code_challenge` = BASE64URL(SHA256(code_verifier))
+  - Sends challenge to authorization endpoint
+  - Sends verifier to token endpoint
+  - Server validates SHA256(verifier) == challenge
+- **Single-use codes**: Authorization codes valid for 10 minutes, one-time use only
+- **State parameter**: CSRF protection via random state value
+- **Localhost redirect**: OAuth callback to http://localhost:10000/ (configurable ports 10000-10010)
+
+**Implementation Libraries**:
+- `authlib` - OAuth 2.0 server implementation with PKCE support
+- `python-jose` - JWT token generation (if using JWT for tokens)
+- `secrets` module - Cryptographically secure random code generation
+
+**Endpoints**:
+- `GET /.well-known/terraform.json` - Service discovery with login.v1 configuration
+- `GET /oauth/authorization` - OAuth authorization endpoint (redirects to login, then to localhost)
+- `POST /oauth/token` - Token endpoint (exchanges code for access token)
+
+**Database Storage**:
+- **OAuthAuthorizationCode** entity stores temporary authorization codes
+  - Fields: code, user_id, client_id, redirect_uri, code_challenge, code_challenge_method, scopes
+  - Expires after 10 minutes
+  - Single-use (marked as used_at after exchange)
+  - Cleanup job deletes expired/used codes periodically
+
+**Token Management**:
+- Access tokens stored as APIToken entities (reuses existing infrastructure)
+- Tokens do not expire (`expires_in: null`) per Terraform CLI expectation
+- User can revoke tokens via web UI
+- Token includes all namespace permissions user has access to
+
+**CI/CD Integration**:
+- Tokens obtained via `terraform login` can be used in CI/CD pipelines
+- Alternative: Use Terraform CLI configuration file credentials section
+  - Static token in `.terraformrc`: `credentials "registry.example.com" { token = "..." }`
+  - Dynamic token via credentials_helper for advanced workflows
+- Both methods use same APIToken authentication mechanism
+
+**Alternatives Considered**:
+- **Password Grant**: Only supported by Terraform for app.terraform.io, not for third-party registries
+- **Client Credentials**: Not supported by Terraform CLI for registry authentication
+- **Device Code Flow**: Not supported by Terraform CLI
+
+**Best Practices**:
+- Port range 10000-10010 allows up to 11 concurrent login attempts
+- Authorization codes expire quickly (10 minutes) to limit attack window
+- PKCE code_verifier must be at least 43 characters (recommended 128)
+- Use S256 method (SHA256) for code_challenge, not "plain"
+- Clean up expired authorization codes regularly (hourly job)
+- Log all token issuance events for audit trail
+
 ## Testing Strategy
 
 **Decision**: pytest with contract, integration, and unit test layers

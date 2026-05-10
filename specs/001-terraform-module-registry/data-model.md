@@ -28,23 +28,27 @@
 │ - permission_level    │                         │ - last_download  │
 └───────────────────────┘                         └──────────────────┘
 
-                              ┌──────────────┐
-                              │  User        │
-                              │              │
-                              │ - id         │
-                              │ - email      │
-                              │ - groups[]   │
-                              │ - created_at │
-                              └──────────────┘
-
-                              ┌──────────────┐
-                              │  APIToken    │
-                              │              │
-                              │ - token_hash │
-                              │ - user_id    │
-                              │ - scopes[]   │
-                              │ - expires_at │
-                              └──────────────┘
+                              ┌──────────────────────┐
+                              │  User                │
+                              │                      │
+                              │ - id                 │
+                              │ - email              │
+                              │ - groups[]           │
+                              │ - created_at         │
+                              └──────┬───────────────┘
+                                     │
+                         ┌───────────┴───────────┐
+                         │ 1:N                   │ 1:N
+                         │                       │
+             ┌───────────▼───────────┐   ┌───────▼──────────────────┐
+             │  APIToken             │   │  OAuthAuthorizationCode  │
+             │                       │   │                          │
+             │ - token_hash          │   │ - code                   │
+             │ - user_id             │   │ - user_id                │
+             │ - scopes[]            │   │ - code_challenge (PKCE)  │
+             │ - expires_at          │   │ - redirect_uri           │
+             └───────────────────────┘   │ - expires_at (10 min)    │
+                                         └──────────────────────────┘
 ```
 
 ## Core Entities
@@ -364,6 +368,76 @@ Credentials for CI/CD pipeline authentication with scope limitations.
 
 ---
 
+### OAuthAuthorizationCode
+
+Temporary storage for OAuth 2.0 authorization codes used in Terraform CLI login flow with PKCE.
+
+**Fields**:
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| id | UUID | PRIMARY KEY | Unique identifier |
+| code | VARCHAR(128) | UNIQUE, NOT NULL | Authorization code (random, URL-safe) |
+| user_id | UUID | FOREIGN KEY(User.id), NOT NULL | User who authorized the request |
+| client_id | VARCHAR(200) | NOT NULL | OAuth client identifier (e.g., "terraform-cli") |
+| redirect_uri | VARCHAR(1000) | NOT NULL | Callback URL for code delivery |
+| code_challenge | VARCHAR(128) | NOT NULL | PKCE code challenge (SHA256 hash) |
+| code_challenge_method | VARCHAR(10) | NOT NULL | PKCE method (always "S256") |
+| scopes | JSONB | NOT NULL, DEFAULT '[]' | Requested scopes (namespace permissions) |
+| used_at | TIMESTAMP | NULL | Timestamp when code was exchanged for token |
+| expires_at | TIMESTAMP | NOT NULL | Code expiration (10 minutes from creation) |
+| created_at | TIMESTAMP | NOT NULL, DEFAULT NOW() | Code creation timestamp |
+
+**Validation Rules**:
+- code must be cryptographically random, URL-safe, at least 32 characters
+- code is single-use (used_at must be NULL when exchanging)
+- code_challenge_method must be "S256" (other methods not supported)
+- expires_at must be created_at + 10 minutes
+- Code is valid only if: used_at IS NULL AND expires_at > NOW()
+
+**Indexes**:
+- PRIMARY KEY on `id`
+- UNIQUE INDEX on `code`
+- INDEX on `expires_at` for cleanup queries
+- INDEX on `user_id` for user audit
+
+**PKCE Validation**:
+```python
+# When exchanging code for token
+stored_challenge = authorization_code.code_challenge
+provided_verifier = request.code_verifier
+
+# Compute challenge from verifier
+computed_challenge = base64url(sha256(provided_verifier))
+
+# Verify match
+if computed_challenge != stored_challenge:
+    raise InvalidGrantError("Code verifier does not match challenge")
+```
+
+**Example**:
+```json
+{
+  "id": "cc0e8400-e29b-41d4-a716-446655440000",
+  "code": "SplxlOBeZQQYbYS6WxSbIA",
+  "user_id": "880e8400-e29b-41d4-a716-446655440000",
+  "client_id": "terraform-cli",
+  "redirect_uri": "http://localhost:10000/",
+  "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+  "code_challenge_method": "S256",
+  "scopes": [],
+  "used_at": null,
+  "expires_at": "2026-05-10T13:10:00Z",
+  "created_at": "2026-05-10T13:00:00Z"
+}
+```
+
+**Cleanup Strategy**:
+- Expired codes deleted after 24 hours (used_at NULL AND expires_at < NOW() - INTERVAL '24 hours')
+- Used codes deleted after 7 days (used_at IS NOT NULL AND used_at < NOW() - INTERVAL '7 days')
+- Periodic cleanup job runs hourly
+
+---
+
 ### DownloadMetric
 
 Tracks usage data for module versions including download counts and timestamps.
@@ -440,6 +514,11 @@ WHERE version_id = ?;
    - One user owns many API tokens
    - Foreign key: `APIToken.user_id → User.id`
    - Cascade: DELETE user → DELETE tokens
+
+6. **User → OAuthAuthorizationCode** (1:N)
+   - One user generates many authorization codes during login flows
+   - Foreign key: `OAuthAuthorizationCode.user_id → User.id`
+   - Cascade: DELETE user → DELETE auth codes
 
 ### Many-to-Many
 

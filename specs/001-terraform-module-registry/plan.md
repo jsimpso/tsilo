@@ -7,9 +7,9 @@
 
 ## Summary
 
-Build a private Terraform module registry that implements the Terraform Module Registry Protocol, enabling teams to host and version internal modules. The application provides both a REST API for Terraform CLI compatibility and a modern web UI for module discovery and documentation browsing. Multi-tenancy is achieved through namespaces with OIDC-based authentication and group-based authorization. The system tracks usage metrics and supports CI/CD pipeline authentication.
+Build a private Terraform module registry that implements the Terraform Module Registry Protocol, enabling teams to host and version internal modules. The application provides both a REST API for Terraform CLI compatibility (including `terraform login` support via OAuth 2.0 with PKCE) and a modern web UI for module discovery and documentation browsing. Multi-tenancy is achieved through namespaces with OIDC-based authentication and group-based authorization. The system tracks usage metrics and supports CI/CD pipeline authentication via API tokens or Terraform CLI login.
 
-**Technical Approach**: FastAPI-based web service packaged as Ubuntu Rock (OCI image) with Juju charm deployment. Stateless application design with PostgreSQL backing store, vanilla HTML/CSS/JS frontend served by FastAPI, OIDC integration for authentication, and object storage for module packages.
+**Technical Approach**: FastAPI-based web service packaged as Ubuntu Rock (OCI image) with Juju charm deployment. Stateless application design with PostgreSQL backing store, vanilla HTML/CSS/JS frontend served by FastAPI, OIDC integration for web UI authentication, OAuth 2.0 with PKCE for Terraform CLI login, and object storage for module packages.
 
 ## Technical Context
 
@@ -190,14 +190,15 @@ No constitution violations. All design decisions align with 12-factor principles
 ## Phase 1: Design - COMPLETE ✅
 
 **Artifacts**:
-- [data-model.md](data-model.md) - Complete database schema with 7 entities
-- [contracts/terraform-registry-api.md](contracts/terraform-registry-api.md) - Terraform protocol endpoints
+- [data-model.md](data-model.md) - Complete database schema with 8 entities
+- [contracts/terraform-registry-api.md](contracts/terraform-registry-api.md) - Terraform protocol endpoints including OAuth login
 - [contracts/web-ui-api.md](contracts/web-ui-api.md) - Web UI API endpoints
 - [quickstart.md](quickstart.md) - Developer onboarding guide
 
 **Key Deliverables**:
-- 7 database tables: Namespace, Module, ModuleVersion, NamespacePermission, User, APIToken, DownloadMetric
-- Terraform protocol compliance: service discovery, version listing, module download, module upload
+- 8 database tables: Namespace, Module, ModuleVersion, NamespacePermission, User, APIToken, OAuthAuthorizationCode, DownloadMetric
+- Terraform protocol compliance: service discovery, version listing, module download, module upload, CLI login (OAuth 2.0 + PKCE)
+- OAuth 2.0 endpoints: `/oauth/authorization`, `/oauth/token` with PKCE security
 - Web UI APIs: authentication, module browsing, namespace management, metrics, token management
 - Complete development workflow with just commands
 - Database migration strategy with Alembic

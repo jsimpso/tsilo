@@ -154,6 +154,11 @@ As a module author or platform administrator, I need to view download metrics fo
 - **FR-015**: System MUST authenticate web UI users via OIDC (OpenID Connect)
 - **FR-016**: System MUST extract group membership from OIDC claims or external directory
 - **FR-017**: System MUST support authentication for CI/CD pipelines via API tokens or service credentials
+- **FR-017a**: System MUST implement Terraform CLI login protocol to support `terraform login` command
+- **FR-017b**: System MUST provide OAuth 2.0 authorization endpoint for Terraform CLI authentication
+- **FR-017c**: System MUST provide OAuth 2.0 token endpoint for issuing access tokens to Terraform CLI
+- **FR-017d**: System MUST implement Proof Key for Code Exchange (PKCE) extension for OAuth security
+- **FR-017e**: System MUST support service discovery for login.v1 configuration at /.well-known/terraform.json
 - **FR-018**: System MUST enforce namespace-level permissions based on group membership
 - **FR-019**: System MUST distinguish between read permissions (download modules) and write permissions (upload modules) at the namespace level
 - **FR-020**: System MUST reject unauthenticated requests for module downloads and uploads

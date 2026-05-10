@@ -19,7 +19,7 @@ This registry implements the Terraform Module Registry Protocol, enabling `terra
 
 ### GET /.well-known/terraform.json
 
-**Purpose**: Terraform service discovery endpoint (required by protocol)
+**Purpose**: Terraform remote service discovery endpoint (required by protocol)
 
 **Authentication**: Not required (public endpoint)
 
@@ -32,7 +32,14 @@ Host: registry.example.com
 **Response** (200 OK):
 ```json
 {
-  "modules.v1": "/v1/modules/"
+  "modules.v1": "/v1/modules/",
+  "login.v1": {
+    "client": "terraform-cli",
+    "grant_types": ["authz_code"],
+    "authz": "/oauth/authorization",
+    "token": "/oauth/token",
+    "ports": [10000, 10010]
+  }
 }
 ```
 
@@ -42,12 +49,157 @@ Content-Type: application/json
 Cache-Control: public, max-age=3600
 ```
 
-**Spec Alignment**: FR-002 - System MUST respond to module discovery requests
+**Login Configuration Properties**:
+- `client`: OAuth client_id (advisory only - Terraform is a public client)
+- `grant_types`: Array of supported OAuth grant types (only `authz_code` supported for non-HCP Terraform)
+- `authz`: Authorization endpoint URL (absolute or relative)
+- `token`: Token endpoint URL (absolute or relative)
+- `ports`: [min, max] port range for OAuth redirect (10000-10010 recommended)
+
+**Spec Alignment**:
+- FR-002 - System MUST respond to module discovery requests
+- FR-017e - System MUST support service discovery for login.v1 configuration
 
 **Implementation Notes**:
 - Static endpoint, can be cached for 1 hour
 - No authentication required (protocol requirement)
-- Must return exact structure specified by Terraform
+- Must return exact structure specified by Terraform Remote Service Discovery protocol
+- Port range 10000-10010 allows up to 11 concurrent login attempts
+- Relative URLs resolve against this discovery endpoint URL
+
+---
+
+## Terraform CLI Login Protocol
+
+### GET /oauth/authorization
+
+**Purpose**: OAuth 2.0 authorization endpoint for Terraform CLI login
+
+**Authentication**: Not required (initiates auth flow)
+
+**Query Parameters**:
+- `client_id` (string): OAuth client identifier (e.g., "terraform-cli")
+- `code_challenge` (string): PKCE code challenge (SHA256 hash of code_verifier)
+- `code_challenge_method` (string): PKCE challenge method (must be "S256")
+- `redirect_uri` (string): Callback URL (e.g., "http://localhost:10000/")
+- `response_type` (string): OAuth response type (must be "code")
+- `state` (string): CSRF protection state parameter
+
+**Request**:
+```http
+GET /oauth/authorization?client_id=terraform-cli&code_challenge=E9Melhoa...&code_challenge_method=S256&redirect_uri=http://localhost:10000/&response_type=code&state=abc123 HTTP/1.1
+Host: registry.example.com
+```
+
+**Response** (302 Redirect to login page):
+```http
+HTTP/1.1 302 Found
+Location: /login?next=%2Foauth%2Fauthorization%3Fclient_id%3Dterraform-cli%26...
+Set-Cookie: oauth_state=...; HttpOnly; Secure; SameSite=Lax
+```
+
+**After User Login** (302 Redirect to redirect_uri):
+```http
+HTTP/1.1 302 Found
+Location: http://localhost:10000/?code=AUTH_CODE&state=abc123
+```
+
+**Error Response** (user denies):
+```http
+HTTP/1.1 302 Found
+Location: http://localhost:10000/?error=access_denied&error_description=User+denied+authorization&state=abc123
+```
+
+**Spec Alignment**:
+- FR-017a - System MUST implement Terraform CLI login protocol
+- FR-017b - System MUST provide OAuth 2.0 authorization endpoint
+
+**Implementation Notes**:
+- Redirects unauthenticated users to login page
+- Stores authorization request in session
+- After authentication, prompts user to authorize Terraform CLI access
+- On approval, generates authorization code and redirects to redirect_uri
+- Authorization code valid for 10 minutes
+- PKCE code_challenge must match code_verifier in token request
+
+---
+
+### POST /oauth/token
+
+**Purpose**: OAuth 2.0 token endpoint for exchanging authorization code for access token
+
+**Authentication**: Not required (uses authorization code)
+
+**Content-Type**: `application/x-www-form-urlencoded`
+
+**Request Parameters**:
+- `grant_type` (string): OAuth grant type (must be "authorization_code")
+- `code` (string): Authorization code from authorization endpoint
+- `redirect_uri` (string): Same redirect_uri used in authorization request
+- `client_id` (string): OAuth client identifier (must match authorization request)
+- `code_verifier` (string): PKCE code verifier (plaintext value)
+
+**Request**:
+```http
+POST /oauth/token HTTP/1.1
+Host: registry.example.com
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&code=AUTH_CODE&redirect_uri=http://localhost:10000/&client_id=terraform-cli&code_verifier=dBjftJe...
+```
+
+**Response** (200 OK):
+```json
+{
+  "access_token": "tsilo_abc123def456...",
+  "token_type": "Bearer",
+  "expires_in": null
+}
+```
+
+**Response Headers**:
+```http
+Content-Type: application/json
+Cache-Control: no-store
+```
+
+**Error Responses**:
+
+- **400 Bad Request** (invalid code_verifier):
+```json
+{
+  "error": "invalid_grant",
+  "error_description": "Code verifier does not match code challenge"
+}
+```
+
+- **400 Bad Request** (expired code):
+```json
+{
+  "error": "invalid_grant",
+  "error_description": "Authorization code has expired"
+}
+```
+
+- **400 Bad Request** (code already used):
+```json
+{
+  "error": "invalid_grant",
+  "error_description": "Authorization code has already been used"
+}
+```
+
+**Spec Alignment**:
+- FR-017c - System MUST provide OAuth 2.0 token endpoint
+- FR-017d - System MUST implement PKCE extension
+
+**Implementation Notes**:
+- Validate code_verifier: SHA256(code_verifier) must equal stored code_challenge
+- Authorization code is single-use only
+- Access token does not expire (`expires_in: null`)
+- Terraform CLI does not support token refresh
+- Store access token as APIToken in database for future API requests
+- Token scope includes all namespaces user has access to
 
 ---
 
