@@ -31,7 +31,27 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Reference: `.specify/memory/constitution.md`
+
+**Required Gates**:
+
+- [ ] **Codebase & Dependencies**: All dependencies explicitly declared in requirements files
+- [ ] **Configuration**: Environment variables used for all config (no hardcoded values)
+- [ ] **Code Quality**: Linting (ruff/black/prettier) and type checking (mypy) configured
+- [ ] **Test-First**: TDD workflow documented; tests written before implementation
+- [ ] **Stateless Design**: Application processes share no state; backing services identified
+- [ ] **Build/Release/Run**: Separate stages defined; semantic versioning planned
+- [ ] **Observability**: Structured logging planned; /health and /metrics endpoints specified
+- [ ] **Disposability**: Graceful shutdown handling (SIGTERM) and circuit breakers planned
+- [ ] **Port Binding**: Self-contained web server (no external server dependency)
+- [ ] **Concurrency**: Horizontal scaling approach documented; process model defined
+- [ ] **Admin Processes**: One-off admin tasks identified and environment parity ensured
+- [ ] **UX Consistency**: UI patterns, responsive design, WCAG 2.1 AA compliance, error handling documented
+- [ ] **Security**: OIDC authentication, input validation, rate limiting, HTTPS/TLS planned
+- [ ] **Performance**: API latency (<200ms p95), DB query performance (<50ms), caching strategy defined
+- [ ] **Workflow**: CI/CD pipeline, code review process, branch protection, test coverage (≥80%) planned
+
+**Complexity Tracking**: Document any principle violations in the Complexity Tracking table below
 
 ## Project Structure
 
