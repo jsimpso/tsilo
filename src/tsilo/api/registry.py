@@ -75,3 +75,62 @@ async def list_versions(
         media_type="application/json",
         headers={"Cache-Control": "private, max-age=300"},
     )
+
+
+@router.get("/v1/modules/{namespace}/{name}/{provider}/{version}/download")
+async def download_module(
+    namespace: str,
+    name: str,
+    provider: str,
+    version: str,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Provide download URL for a specific module version.
+
+    Returns 204 with X-Terraform-Get header containing a pre-signed S3 URL.
+    Authentication required. Download counter is incremented asynchronously.
+    """
+    # Check permission
+    perm_service = PermissionService(db)
+    if not await perm_service.check_read_access(current_user, namespace):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You do not have read access to namespace '{namespace}'",
+        )
+
+    # Get version details
+    version_service = VersionService(db)
+    version_info = await version_service.get_version(namespace, name, provider, version)
+
+    if version_info is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Version '{version}' of module '{namespace}/{name}/{provider}' not found",
+        )
+
+    # Generate pre-signed download URL
+    storage = StorageService()
+    download_url = storage.generate_download_url(namespace, name, provider, version)
+
+    # Increment download counter (non-blocking)
+    metrics_service = MetricsService(db)
+    await metrics_service.increment_download_count(version_info["version_id"])
+
+    logger.info(
+        "module_downloaded",
+        user_id=str(current_user.id),
+        user_email=current_user.email,
+        namespace=namespace,
+        module=name,
+        provider=provider,
+        version=version,
+    )
+
+    return Response(
+        status_code=204,
+        headers={
+            "X-Terraform-Get": download_url,
+            "Cache-Control": "no-store",
+        },
+    )

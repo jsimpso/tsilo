@@ -8,7 +8,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from tsilo.main import app
-from tsilo.middleware.auth import CurrentUser
+from tsilo.middleware.auth import CurrentUser, get_current_user
 from tsilo.models.user import User
 
 
@@ -28,22 +28,36 @@ def _make_user(groups: list[str] | None = None) -> CurrentUser:
 @pytest.fixture
 async def client():
     """Create an async test client."""
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False) as ac:
         yield ac
 
 
 @pytest.fixture
 def mock_auth():
-    """Mock authentication to return a test user."""
+    """Override authentication dependency to return a test user."""
     user = _make_user()
-    with patch("tsilo.api.registry.get_current_user", return_value=user):
-        yield user
+
+    async def override_get_current_user():
+        return user
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    yield user
+    app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.fixture
+def mock_db():
+    """Mock database session dependency."""
+    from tsilo.models import get_db
+
+    mock_session = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_session
+    yield mock_session
+    app.dependency_overrides.pop(get_db, None)
 
 
 @pytest.mark.asyncio
-async def test_full_terraform_download_flow(client, mock_auth):
+async def test_full_terraform_download_flow(client, mock_auth, mock_db):
     """Simulate complete Terraform CLI download flow:
     1. Service discovery
     2. Version listing
@@ -71,9 +85,7 @@ async def test_full_terraform_download_flow(client, mock_auth):
             response = await client.get(versions_url)
             assert response.status_code == 200
             versions_data = response.json()
-            available_versions = [
-                v["version"] for v in versions_data["modules"][0]["versions"]
-            ]
+            available_versions = [v["version"] for v in versions_data["modules"][0]["versions"]]
             assert "1.2.3" in available_versions
 
     # Step 3: Module download (auth required)
@@ -107,7 +119,7 @@ async def test_full_terraform_download_flow(client, mock_auth):
 
 
 @pytest.mark.asyncio
-async def test_terraform_download_flow_version_constraint(client, mock_auth):
+async def test_terraform_download_flow_version_constraint(client, mock_auth, mock_db):
     """Simulate Terraform CLI with version constraint (~> 1.0).
 
     Terraform CLI fetches all versions and picks the best match locally.
@@ -136,7 +148,7 @@ async def test_terraform_download_flow_version_constraint(client, mock_auth):
 
 
 @pytest.mark.asyncio
-async def test_terraform_download_flow_missing_module(client, mock_auth):
+async def test_terraform_download_flow_missing_module(client, mock_auth, mock_db):
     """Terraform CLI gets 404 for non-existent module."""
     with patch("tsilo.api.registry.PermissionService") as mock_perm_cls:
         mock_perm = AsyncMock()
@@ -148,14 +160,12 @@ async def test_terraform_download_flow_missing_module(client, mock_auth):
             mock_ver.list_versions.return_value = None
             mock_ver_cls.return_value = mock_ver
 
-            response = await client.get(
-                "/v1/modules/platform-team/nonexistent/aws/versions"
-            )
+            response = await client.get("/v1/modules/platform-team/nonexistent/aws/versions")
             assert response.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_terraform_download_flow_no_permissions(client, mock_auth):
+async def test_terraform_download_flow_no_permissions(client, mock_auth, mock_db):
     """Terraform CLI gets 403 for unauthorized namespace."""
     with patch("tsilo.api.registry.PermissionService") as mock_perm_cls:
         mock_perm = AsyncMock()
