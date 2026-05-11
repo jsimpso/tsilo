@@ -70,21 +70,21 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T030 [P] [US1] Contract test for service discovery in tests/contract/test_service_discovery.py: verify /.well-known/terraform.json returns correct modules.v1 and login.v1 structure
-- [ ] T031 [P] [US1] Contract test for version listing in tests/contract/test_version_listing.py: verify versions returned in descending order, authentication required
-- [ ] T032 [P] [US1] Contract test for module download in tests/contract/test_module_download.py: verify download URL generation, download counter increment, authentication/authorization
-- [ ] T033 [P] [US1] Integration test for Terraform CLI download flow in tests/integration/test_terraform_download.py: end-to-end test with real Terraform CLI
+- [x] T030 [P] [US1] Contract test for service discovery in tests/contract/test_service_discovery.py: verify /.well-known/terraform.json returns correct modules.v1 and login.v1 structure
+- [x] T031 [P] [US1] Contract test for version listing in tests/contract/test_version_listing.py: verify versions returned in descending order, authentication required
+- [x] T032 [P] [US1] Contract test for module download in tests/contract/test_module_download.py: verify download URL generation, download counter increment, authentication/authorization
+- [x] T033 [P] [US1] Integration test for Terraform CLI download flow in tests/integration/test_terraform_download.py: end-to-end test with real Terraform CLI
 
 ### Implementation for User Story 1
 
-- [ ] T034 [P] [US1] Create Pydantic schemas for Terraform protocol in src/tsilo/schemas/terraform.py: VersionsResponse, DownloadResponse, ServiceDiscovery
-- [ ] T035 [US1] Implement service discovery endpoint in src/tsilo/api/registry.py: GET /.well-known/terraform.json (no auth required, cacheable)
-- [ ] T036 [US1] Implement version listing endpoint in src/tsilo/api/registry.py: GET /v1/modules/:namespace/:name/:provider/versions with permission check, semantic version sorting
-- [ ] T037 [US1] Create module version service in src/tsilo/services/version_service.py: list_versions, get_version, semantic version comparison
-- [ ] T038 [US1] Implement module download endpoint in src/tsilo/api/registry.py: GET /v1/modules/:namespace/:name/:provider/:version/download with pre-signed S3 URL generation
-- [ ] T039 [US1] Create metrics service in src/tsilo/services/metrics_service.py: increment_download_count (async, non-blocking), update_last_download_at
-- [ ] T040 [US1] Add error handling for 404 (module not found), 403 (no permission), 401 (not authenticated)
-- [ ] T041 [US1] Add structured logging for all download events: user_id, namespace, module, provider, version, timestamp
+- [x] T034 [P] [US1] Create Pydantic schemas for Terraform protocol in src/tsilo/schemas/terraform.py: VersionsResponse, DownloadResponse, ServiceDiscovery
+- [x] T035 [US1] Implement service discovery endpoint in src/tsilo/api/registry.py: GET /.well-known/terraform.json (no auth required, cacheable)
+- [x] T036 [US1] Implement version listing endpoint in src/tsilo/api/registry.py: GET /v1/modules/:namespace/:name/:provider/versions with permission check, semantic version sorting
+- [x] T037 [US1] Create module version service in src/tsilo/services/version_service.py: list_versions, get_version, semantic version comparison
+- [x] T038 [US1] Implement module download endpoint in src/tsilo/api/registry.py: GET /v1/modules/:namespace/:name/:provider/:version/download with pre-signed S3 URL generation
+- [x] T039 [US1] Create metrics service in src/tsilo/services/metrics_service.py: increment_download_count (async, non-blocking), update_last_download_at
+- [x] T040 [US1] Add error handling for 404 (module not found), 403 (no permission), 401 (not authenticated)
+- [x] T041 [US1] Add structured logging for all download events: user_id, namespace, module, provider, version, timestamp
 
 **Checkpoint**: Terraform CLI can successfully download modules via `terraform init`
 
