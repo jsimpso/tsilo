@@ -68,3 +68,14 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
+
+
+# Import all models so SQLAlchemy mappers are fully configured
+from tsilo.models.api_token import APIToken  # noqa: E402, F401
+from tsilo.models.metric import DownloadMetric  # noqa: E402, F401
+from tsilo.models.module import Module  # noqa: E402, F401
+from tsilo.models.namespace import Namespace  # noqa: E402, F401
+from tsilo.models.oauth_code import OAuthAuthorizationCode  # noqa: E402, F401
+from tsilo.models.permission import NamespacePermission  # noqa: E402, F401
+from tsilo.models.user import User  # noqa: E402, F401
+from tsilo.models.version import ModuleVersion  # noqa: E402, F401
