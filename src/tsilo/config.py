@@ -28,9 +28,7 @@ class Settings(BaseSettings):
     oidc_issuer: str = Field(default="https://your-oidc-provider.com", alias="OIDC_ISSUER")
     oidc_client_id: str = Field(default="tsilo-dev", alias="OIDC_CLIENT_ID")
     oidc_client_secret: str = Field(default="", alias="OIDC_CLIENT_SECRET")
-    oidc_redirect_uri: str = Field(
-        default="http://localhost:8000/auth/callback", alias="OIDC_REDIRECT_URI"
-    )
+    oidc_redirect_uri: str = Field(default="http://localhost:8000/auth/callback", alias="OIDC_REDIRECT_URI")
 
     # Security
     secret_key: str = Field(default="change-me-in-production", alias="SECRET_KEY")

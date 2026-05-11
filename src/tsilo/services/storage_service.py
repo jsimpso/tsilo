@@ -21,9 +21,7 @@ class StorageService:
             config=BotoConfig(signature_version="s3v4"),
         )
 
-    def _build_key(
-        self, namespace: str, name: str, provider: str, version: str
-    ) -> str:
+    def _build_key(self, namespace: str, name: str, provider: str, version: str) -> str:
         """Build S3 object key for a module package."""
         return f"{namespace}/{name}/{provider}/{version}/module.tar.gz"
 

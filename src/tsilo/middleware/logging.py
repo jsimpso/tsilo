@@ -39,9 +39,7 @@ logger = structlog.get_logger()
 class LoggingMiddleware(BaseHTTPMiddleware):
     """Middleware that adds correlation IDs and logs request/response details."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
         start_time = time.perf_counter()
 

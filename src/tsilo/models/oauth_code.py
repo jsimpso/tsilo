@@ -17,21 +17,15 @@ class OAuthAuthorizationCode(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=generate_uuid)
     code: Mapped[str] = mapped_column(String(128), unique=True, nullable=False)
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     client_id: Mapped[str] = mapped_column(String(200), nullable=False)
     redirect_uri: Mapped[str] = mapped_column(String(1000), nullable=False)
     code_challenge: Mapped[str] = mapped_column(String(128), nullable=False)
     code_challenge_method: Mapped[str] = mapped_column(String(10), nullable=False, default="S256")
     scopes: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, index=True
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default="now()"
-    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default="now()")
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="oauth_codes")  # noqa: F821

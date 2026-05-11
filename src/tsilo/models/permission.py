@@ -20,7 +20,9 @@ class NamespacePermission(Base, TimestampMixin):
     __tablename__ = "namespace_permissions"
     __table_args__ = (
         UniqueConstraint(
-            "namespace_id", "group_name", "permission_level",
+            "namespace_id",
+            "group_name",
+            "permission_level",
             name="uq_namespace_group_permission",
         ),
     )

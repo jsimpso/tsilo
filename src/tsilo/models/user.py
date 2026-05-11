@@ -20,9 +20,7 @@ class User(Base, TimestampMixin):
     email: Mapped[str] = mapped_column(String(320), nullable=False, index=True)
     name: Mapped[str | None] = mapped_column(Unicode(200), nullable=True)
     groups: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
-    last_login_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     api_tokens: Mapped[list["APIToken"]] = relationship(  # noqa: F821

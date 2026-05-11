@@ -21,9 +21,7 @@ class ModuleVersion(Base):
     """Represents a specific version of a module with metadata and package location."""
 
     __tablename__ = "module_versions"
-    __table_args__ = (
-        UniqueConstraint("module_id", "version", name="uq_module_version"),
-    )
+    __table_args__ = (UniqueConstraint("module_id", "version", name="uq_module_version"),)
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=generate_uuid)
     module_id: Mapped[uuid.UUID] = mapped_column(
@@ -36,15 +34,9 @@ class ModuleVersion(Base):
     package_url: Mapped[str] = mapped_column(String(1000), nullable=False)
     package_size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
     checksum_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
-    published_by: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-    )
-    published_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default="now()"
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, server_default="now()"
-    )
+    published_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default="now()")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default="now()")
 
     # Relationships
     module: Mapped["Module"] = relationship(back_populates="versions")  # noqa: F821
