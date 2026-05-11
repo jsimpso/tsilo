@@ -18,6 +18,12 @@ description: "Task list template for feature implementation"
 - **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
 - Include exact file paths in descriptions
 
+> **Test Execution (MANDATORY)**: Writing new tests is optional (include only if requested in
+> the feature spec). However, running the existing test suite to confirm it passes is
+> **MANDATORY** before marking any task ✅ complete — see Constitution § Agent Execution
+> Standards. Removing, skipping, or weakening a failing test is NOT a valid resolution and
+> requires explicit human approval before any test can be modified.
+
 ## Path Conventions
 
 - **Single project**: `src/`, `tests/` at repository root

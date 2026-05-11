@@ -1,13 +1,13 @@
 <!--
 Sync Impact Report:
-- Version: 1.0.0 (initial constitution establishment)
-- Modified principles: N/A (initial creation)
-- Added sections: All core principles, Security & Performance Standards, Development Workflow
+- Version: 1.0.0 → 1.1.0
+- Modified principles: IV. Test-First Development (added task-level test-execution gate rules)
+- Added sections: Agent Execution Standards
 - Removed sections: N/A
 - Templates requiring updates:
-  ✅ plan-template.md - Constitution Check section aligns with principles
-  ✅ spec-template.md - User scenarios align with UX consistency principle
-  ✅ tasks-template.md - Test-first workflow aligns with TDD principle
+  ✅ plan-template.md - Constitution Check gates unchanged; Test-First gate already covers this
+  ✅ spec-template.md - Scope/requirements alignment unaffected
+  ✅ tasks-template.md - Added note distinguishing writing tests (optional) vs. running tests (mandatory)
 - Follow-up TODOs: None
 -->
 
@@ -51,8 +51,11 @@ Sync Impact Report:
 **MUST** include contract tests for all API endpoints.
 **MUST** include integration tests for multi-component interactions.
 **MUST** ensure all tests pass before merging to main branch.
+**MUST** execute the full test suite and confirm zero failures before marking any task complete.
+**MUST NOT** consider a task done based on code review or manual inspection alone; test execution is a hard gate.
+**MUST** fix any test failures introduced by the task's changes before proceeding to the next task.
 
-**Rationale**: TDD ensures code is testable by design, reduces defects, and provides living documentation. Pre-approved tests align implementation with user expectations and prevent scope creep.
+**Rationale**: TDD ensures code is testable by design, reduces defects, and provides living documentation. Pre-approved tests align implementation with user expectations and prevent scope creep. Mandatory test execution at every task boundary ensures the codebase remains in a demonstrably working state at every checkpoint.
 
 ### V. Stateless Processes & Backing Services
 
@@ -159,6 +162,33 @@ Sync Impact Report:
 
 **Rationale**: Quality gates prevent defects from reaching production. Code review distributes knowledge and improves design quality. Automated checks provide fast feedback and reduce review burden.
 
+## Agent Execution Standards
+
+These rules govern autonomous agents (AI coding assistants, CI bots) executing
+implementation tasks on behalf of engineers.
+
+**MUST** run the project test suite (e.g., `pytest`, `npm test`) after completing
+each implementation task and before marking it complete.
+**MUST** confirm all tests pass (zero failures, zero errors, zero unexpected skips)
+before closing a task.
+**MUST** fix any regression introduced by the task before proceeding to the next task.
+**MUST NOT** mark a task complete citing time constraints or assuming tests will pass.
+**MUST NOT** skip test execution because "only non-test files were changed."
+**MUST** report the exact test command run and its output summary in the task
+completion note.
+**MUST NOT** remove, skip (e.g. `@pytest.mark.skip`, `xit`, `x.test`), comment out,
+or otherwise weaken an existing failing test to achieve a passing suite; this
+constitutes a test-integrity violation and is treated as a test failure.
+**MUST** pause and request explicit human approval before modifying any existing test,
+providing written justification for why the test itself (not the implementation) is
+believed to be incorrect.
+
+**Rationale**: Autonomous agents lack the intuitive judgment that alerts a human
+engineer to likely regressions. Mandatory test execution at every task boundary
+prevents silent breakage from accumulating across a session and ensures the codebase
+remains in a demonstrably working state at every checkpoint. Prohibiting silent test
+deletion or weakening ensures the gate cannot be circumvented.
+
 ## Governance
 
 This constitution supersedes all other development practices and coding conventions. All architectural decisions, code changes, and process modifications MUST comply with these principles. Deviations require explicit justification documented in a Complexity Tracking table (see plan-template.md).
@@ -175,4 +205,4 @@ This constitution supersedes all other development practices and coding conventi
 - Quarterly reviews to assess principle adherence and identify technical debt
 - Constitution serves as the canonical reference for all development decisions
 
-**Version**: 1.0.0 | **Ratified**: 2026-05-10 | **Last Amended**: 2026-05-10
+**Version**: 1.1.0 | **Ratified**: 2026-05-10 | **Last Amended**: 2026-05-11
