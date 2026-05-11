@@ -51,6 +51,14 @@ async def list_versions(
     # Check permission
     perm_service = PermissionService(db)
     if not await perm_service.check_read_access(current_user, namespace):
+        logger.warning(
+            "access_denied",
+            user_id=str(current_user.id),
+            namespace=namespace,
+            module=name,
+            provider=provider,
+            action="list_versions",
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"You do not have read access to namespace '{namespace}'",
@@ -61,6 +69,13 @@ async def list_versions(
     versions = await version_service.list_versions(namespace, name, provider)
 
     if versions is None:
+        logger.info(
+            "module_not_found",
+            namespace=namespace,
+            module=name,
+            provider=provider,
+            action="list_versions",
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Module '{namespace}/{name}/{provider}' not found",
@@ -94,6 +109,15 @@ async def download_module(
     # Check permission
     perm_service = PermissionService(db)
     if not await perm_service.check_read_access(current_user, namespace):
+        logger.warning(
+            "access_denied",
+            user_id=str(current_user.id),
+            namespace=namespace,
+            module=name,
+            provider=provider,
+            version=version,
+            action="download",
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"You do not have read access to namespace '{namespace}'",
@@ -104,6 +128,14 @@ async def download_module(
     version_info = await version_service.get_version(namespace, name, provider, version)
 
     if version_info is None:
+        logger.info(
+            "version_not_found",
+            namespace=namespace,
+            module=name,
+            provider=provider,
+            version=version,
+            action="download",
+        )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Version '{version}' of module '{namespace}/{name}/{provider}' not found",
