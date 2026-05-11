@@ -1,7 +1,11 @@
 """FastAPI application entry point - app initialization, middleware, CORS, security headers."""
 
-from fastapi import FastAPI
+import json
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -29,6 +33,44 @@ app.state.limiter = limiter
 
 # Exception handlers
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+_STATUS_TITLES = {
+    401: "Unauthorized",
+    403: "Forbidden",
+    404: "Not Found",
+    409: "Conflict",
+    422: "Unprocessable Entity",
+    429: "Too Many Requests",
+    500: "Internal Server Error",
+}
+
+
+@app.exception_handler(HTTPException)
+async def terraform_compatible_error_handler(request: Request, exc: HTTPException):
+    """Return errors in Terraform-compatible format for registry API endpoints."""
+    path = request.url.path
+    if path.startswith("/v1/modules/") or path.startswith("/.well-known/"):
+        title = _STATUS_TITLES.get(exc.status_code, "Error")
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "errors": [
+                    {
+                        "status": str(exc.status_code),
+                        "title": title,
+                        "detail": exc.detail,
+                    }
+                ]
+            },
+            headers=getattr(exc, "headers", None),
+        )
+    # For non-registry endpoints, use default format
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=getattr(exc, "headers", None),
+    )
+
 
 # Middleware (applied in reverse order - last added is outermost)
 app.add_middleware(
