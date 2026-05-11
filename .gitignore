@@ -218,3 +218,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 .claude/settings.local.json
+
+# Rock/Charm build artifacts
+*.rock
+*.charm
