@@ -5,7 +5,7 @@ import time
 from fastapi import APIRouter, Response
 from sqlalchemy import text
 
-from tsilo.models import async_session_factory
+from tsilo.models import get_session_factory
 from tsilo.services.storage_service import StorageService
 
 router = APIRouter(tags=["observability"])
@@ -41,7 +41,8 @@ async def health_check() -> dict:
 
     # Database connectivity
     try:
-        async with async_session_factory() as session:
+        factory = get_session_factory()
+        async with factory() as session:
             await session.execute(text("SELECT 1"))
         checks["database"] = "healthy"
     except Exception as e:
