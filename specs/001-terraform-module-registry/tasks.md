@@ -34,27 +34,27 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T009 Create database configuration in src/tsilo/config.py: load all settings from environment variables (12-factor)
-- [ ] T010 Setup SQLAlchemy base and session management in src/tsilo/models/__init__.py
-- [ ] T011 Initialize Alembic for database migrations in src/alembic/: env.py, alembic.ini configuration
-- [ ] T012 [P] Create Namespace model in src/tsilo/models/namespace.py: id, name, display_name, description, timestamps, validation
-- [ ] T013 [P] Create Module model in src/tsilo/models/module.py: id, namespace_id, name, provider, description, source_url, timestamps
-- [ ] T014 [P] Create ModuleVersion model in src/tsilo/models/version.py: id, module_id, version, inputs, outputs, readme, package_url, checksums, published_by, published_at
-- [ ] T015 [P] Create NamespacePermission model in src/tsilo/models/permission.py: id, namespace_id, group_name, permission_level (read/write)
-- [ ] T016 [P] Create User model in src/tsilo/models/user.py: id, oidc_sub, email, name, groups (JSONB), last_login_at, timestamps
-- [ ] T017 [P] Create APIToken model in src/tsilo/models/api_token.py: id, token_hash, user_id, name, scopes (JSONB), expires_at, revoked_at, last_used_at
-- [ ] T018 [P] Create OAuthAuthorizationCode model in src/tsilo/models/oauth_code.py: id, code, user_id, client_id, redirect_uri, code_challenge, code_challenge_method, scopes, used_at, expires_at
-- [ ] T019 [P] Create DownloadMetric model in src/tsilo/models/metric.py: id, version_id, download_count, last_download_at, timestamps
-- [ ] T020 Create initial database migration in src/alembic/versions/20260510_1000_initial_schema.py: all 8 tables with indexes and constraints
-- [ ] T021 Setup S3 storage service in src/tsilo/services/storage_service.py: upload_module, generate_download_url using boto3
-- [ ] T022 Setup OIDC authentication service in src/tsilo/services/auth_service.py: OAuth client configuration, token validation using authlib
-- [ ] T023 Create authentication middleware in src/tsilo/middleware/auth.py: Bearer token validation, session cookie validation, user context injection
-- [ ] T024 [P] Create rate limiting middleware in src/tsilo/middleware/rate_limit.py: per-user limits (1000/hour read, 100/hour write) using slowapi
-- [ ] T025 [P] Create logging middleware in src/tsilo/middleware/logging.py: structured JSON logging with correlation IDs using structlog
-- [ ] T026 Create permission service in src/tsilo/services/permission_service.py: check_read_access, check_write_access based on user groups and namespace permissions
-- [ ] T027 Create FastAPI application entry point in src/tsilo/main.py: app initialization, middleware registration, CORS, security headers
-- [ ] T028 [P] Create health check endpoint in src/tsilo/api/metrics.py: GET /health with database and S3 connectivity checks
-- [ ] T029 [P] Create Prometheus metrics endpoint in src/tsilo/api/metrics.py: GET /metrics with request counters, latency histograms, download counts
+- [x] T009 Create database configuration in src/tsilo/config.py: load all settings from environment variables (12-factor)
+- [x] T010 Setup SQLAlchemy base and session management in src/tsilo/models/__init__.py
+- [x] T011 Initialize Alembic for database migrations in src/alembic/: env.py, alembic.ini configuration
+- [x] T012 [P] Create Namespace model in src/tsilo/models/namespace.py: id, name, display_name, description, timestamps, validation
+- [x] T013 [P] Create Module model in src/tsilo/models/module.py: id, namespace_id, name, provider, description, source_url, timestamps
+- [x] T014 [P] Create ModuleVersion model in src/tsilo/models/version.py: id, module_id, version, inputs, outputs, readme, package_url, checksums, published_by, published_at
+- [x] T015 [P] Create NamespacePermission model in src/tsilo/models/permission.py: id, namespace_id, group_name, permission_level (read/write)
+- [x] T016 [P] Create User model in src/tsilo/models/user.py: id, oidc_sub, email, name, groups (JSONB), last_login_at, timestamps
+- [x] T017 [P] Create APIToken model in src/tsilo/models/api_token.py: id, token_hash, user_id, name, scopes (JSONB), expires_at, revoked_at, last_used_at
+- [x] T018 [P] Create OAuthAuthorizationCode model in src/tsilo/models/oauth_code.py: id, code, user_id, client_id, redirect_uri, code_challenge, code_challenge_method, scopes, used_at, expires_at
+- [x] T019 [P] Create DownloadMetric model in src/tsilo/models/metric.py: id, version_id, download_count, last_download_at, timestamps
+- [x] T020 Create initial database migration in src/alembic/versions/20260510_1000_initial_schema.py: all 8 tables with indexes and constraints
+- [x] T021 Setup S3 storage service in src/tsilo/services/storage_service.py: upload_module, generate_download_url using boto3
+- [x] T022 Setup OIDC authentication service in src/tsilo/services/auth_service.py: OAuth client configuration, token validation using authlib
+- [x] T023 Create authentication middleware in src/tsilo/middleware/auth.py: Bearer token validation, session cookie validation, user context injection
+- [x] T024 [P] Create rate limiting middleware in src/tsilo/middleware/rate_limit.py: per-user limits (1000/hour read, 100/hour write) using slowapi
+- [x] T025 [P] Create logging middleware in src/tsilo/middleware/logging.py: structured JSON logging with correlation IDs using structlog
+- [x] T026 Create permission service in src/tsilo/services/permission_service.py: check_read_access, check_write_access based on user groups and namespace permissions
+- [x] T027 Create FastAPI application entry point in src/tsilo/main.py: app initialization, middleware registration, CORS, security headers
+- [x] T028 [P] Create health check endpoint in src/tsilo/api/metrics.py: GET /health with database and S3 connectivity checks
+- [x] T029 [P] Create Prometheus metrics endpoint in src/tsilo/api/metrics.py: GET /metrics with request counters, latency histograms, download counts
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
