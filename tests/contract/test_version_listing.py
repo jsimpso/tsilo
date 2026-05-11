@@ -8,7 +8,7 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 
 from tsilo.main import app
-from tsilo.middleware.auth import CurrentUser
+from tsilo.middleware.auth import CurrentUser, get_current_user
 from tsilo.models.user import User
 
 
@@ -34,21 +34,45 @@ async def client():
 
 @pytest.fixture
 def mock_auth():
-    """Mock authentication to return a test user."""
+    """Override authentication dependency to return a test user."""
     user = _make_user()
-    with patch("tsilo.api.registry.get_current_user", return_value=user):
-        yield user
+
+    async def override_get_current_user():
+        return user
+
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    yield user
+    app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.fixture
+def mock_db():
+    """Mock database session dependency."""
+    from tsilo.models import get_db
+
+    mock_session = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_session
+    yield mock_session
+    app.dependency_overrides.pop(get_db, None)
 
 
 @pytest.mark.asyncio
 async def test_version_listing_requires_authentication(client):
     """Version listing must require authentication (401 without token)."""
-    response = await client.get("/v1/modules/platform-team/vpc/aws/versions")
-    assert response.status_code == 401
+    from tsilo.models import get_db
+
+    mock_session = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_session
+
+    try:
+        response = await client.get("/v1/modules/platform-team/vpc/aws/versions")
+        assert response.status_code == 401
+    finally:
+        app.dependency_overrides.pop(get_db, None)
 
 
 @pytest.mark.asyncio
-async def test_version_listing_returns_versions_structure(client, mock_auth):
+async def test_version_listing_returns_versions_structure(client, mock_auth, mock_db):
     """Version listing must return {modules: [{versions: [...]}]} structure."""
     with patch("tsilo.api.registry.PermissionService") as mock_perm_cls:
         mock_perm = AsyncMock()
@@ -69,7 +93,7 @@ async def test_version_listing_returns_versions_structure(client, mock_auth):
 
 
 @pytest.mark.asyncio
-async def test_version_listing_descending_order(client, mock_auth):
+async def test_version_listing_descending_order(client, mock_auth, mock_db):
     """Versions must be returned in descending semantic version order."""
     with patch("tsilo.api.registry.PermissionService") as mock_perm_cls:
         mock_perm = AsyncMock()
@@ -88,7 +112,7 @@ async def test_version_listing_descending_order(client, mock_auth):
 
 
 @pytest.mark.asyncio
-async def test_version_listing_forbidden_without_namespace_access(client, mock_auth):
+async def test_version_listing_forbidden_without_namespace_access(client, mock_auth, mock_db):
     """Version listing must return 403 if user lacks read access to namespace."""
     with patch("tsilo.api.registry.PermissionService") as mock_perm_cls:
         mock_perm = AsyncMock()
@@ -100,7 +124,7 @@ async def test_version_listing_forbidden_without_namespace_access(client, mock_a
 
 
 @pytest.mark.asyncio
-async def test_version_listing_not_found_for_nonexistent_module(client, mock_auth):
+async def test_version_listing_not_found_for_nonexistent_module(client, mock_auth, mock_db):
     """Version listing must return 404 if module does not exist."""
     with patch("tsilo.api.registry.PermissionService") as mock_perm_cls:
         mock_perm = AsyncMock()
