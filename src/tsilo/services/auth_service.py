@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tsilo.config import get_settings
 from tsilo.models.user import User
+from tsilo.services.circuit_breaker import oidc_breaker
 
 settings = get_settings()
 
@@ -71,7 +72,11 @@ class AuthService:
         """Validate an OIDC access token by calling the userinfo endpoint.
 
         Returns the user info claims dict or None if invalid.
+        Respects the OIDC circuit breaker to fail fast when the provider is down.
         """
+        if oidc_breaker.is_open:
+            return None
+
         try:
             metadata_url = f"{settings.oidc_issuer}/.well-known/openid-configuration"
             async with httpx.AsyncClient() as client:
@@ -88,19 +93,27 @@ class AuthService:
                     headers={"Authorization": f"Bearer {token}"},
                 )
                 if resp.status_code == 200:
+                    oidc_breaker.record_success()
                     return resp.json()
         except Exception:
-            pass
+            oidc_breaker.record_failure()
         return None
 
     @staticmethod
     def check_connectivity() -> bool:
-        """Check if the OIDC provider is reachable."""
+        """Check if the OIDC provider is reachable. Updates circuit breaker state."""
+        if oidc_breaker.is_open:
+            return False
         try:
             resp = httpx.get(
                 f"{settings.oidc_issuer}/.well-known/openid-configuration",
                 timeout=5.0,
             )
-            return resp.status_code == 200
+            if resp.status_code == 200:
+                oidc_breaker.record_success()
+                return True
+            oidc_breaker.record_failure()
+            return False
         except Exception:
+            oidc_breaker.record_failure()
             return False

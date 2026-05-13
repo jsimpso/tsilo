@@ -2,8 +2,10 @@
 
 import boto3
 from botocore.config import Config as BotoConfig
+from fastapi import HTTPException
 
 from tsilo.config import get_settings
+from tsilo.services.circuit_breaker import s3_breaker
 
 
 class StorageService:
@@ -37,16 +39,29 @@ class StorageService:
         """Upload a module package to S3.
 
         Returns the S3 object key.
+        Raises HTTPException 503 if S3 is unavailable (circuit breaker open).
         """
+        if s3_breaker.is_open:
+            raise HTTPException(
+                status_code=503,
+                detail="Storage service temporarily unavailable",
+                headers={"Retry-After": str(s3_breaker.retry_after)},
+            )
+
         key = self._build_key(namespace, name, provider, version)
-        self._client.put_object(
-            Bucket=self._bucket,
-            Key=key,
-            Body=file_data,
-            ContentType="application/gzip",
-            ChecksumSHA256=checksum_sha256,
-            ServerSideEncryption="AES256",
-        )
+        try:
+            self._client.put_object(
+                Bucket=self._bucket,
+                Key=key,
+                Body=file_data,
+                ContentType="application/gzip",
+                ChecksumSHA256=checksum_sha256,
+                ServerSideEncryption="AES256",
+            )
+            s3_breaker.record_success()
+        except Exception:
+            s3_breaker.record_failure()
+            raise
         return f"s3://{self._bucket}/{key}"
 
     def generate_download_url(
@@ -64,13 +79,27 @@ class StorageService:
 
         Returns:
             Pre-signed URL for downloading the module package.
+
+        Raises HTTPException 503 if S3 is unavailable (circuit breaker open).
         """
+        if s3_breaker.is_open:
+            raise HTTPException(
+                status_code=503,
+                detail="Storage service temporarily unavailable",
+                headers={"Retry-After": str(s3_breaker.retry_after)},
+            )
+
         key = self._build_key(namespace, name, provider, version)
-        url: str = self._client.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": self._bucket, "Key": key},
-            ExpiresIn=expires_in,
-        )
+        try:
+            url: str = self._client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self._bucket, "Key": key},
+                ExpiresIn=expires_in,
+            )
+            s3_breaker.record_success()
+        except Exception:
+            s3_breaker.record_failure()
+            raise
         return url
 
     def check_connectivity(self) -> bool:

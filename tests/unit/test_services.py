@@ -7,6 +7,7 @@ import time
 import pytest
 
 from tsilo.services.cache import TTLCache
+from tsilo.services.circuit_breaker import CircuitBreaker, CircuitState
 from tsilo.services.module_parser import ModuleParser, ParseError
 from tsilo.services.version_service import VersionService, _semver_compare
 
@@ -62,6 +63,52 @@ class TestTTLCache:
         cache = TTLCache(default_ttl=60.0)
         cache.set("perm", False)
         assert cache.get("perm") is False
+
+
+# ── Circuit Breaker ──────────────────────────────────────────────────────────
+
+
+class TestCircuitBreaker:
+    def test_starts_closed(self):
+        cb = CircuitBreaker("test")
+        assert cb.state == CircuitState.CLOSED
+        assert cb.is_open is False
+
+    def test_opens_after_threshold(self):
+        cb = CircuitBreaker("test", failure_threshold=3)
+        cb.record_failure()
+        cb.record_failure()
+        assert cb.is_open is False
+        cb.record_failure()
+        assert cb.is_open is True
+
+    def test_success_resets(self):
+        cb = CircuitBreaker("test", failure_threshold=2)
+        cb.record_failure()
+        cb.record_success()
+        cb.record_failure()
+        assert cb.is_open is False  # reset, so only 1 failure
+
+    def test_half_open_after_recovery(self):
+        cb = CircuitBreaker("test", failure_threshold=1, recovery_timeout=0.01)
+        cb.record_failure()
+        assert cb.is_open is True
+        time.sleep(0.02)
+        assert cb.state == CircuitState.HALF_OPEN
+
+    def test_retry_after(self):
+        cb = CircuitBreaker("test", failure_threshold=1, recovery_timeout=30.0)
+        cb.record_failure()
+        assert cb.retry_after > 0
+        assert cb.retry_after <= 31
+
+    def test_reset(self):
+        cb = CircuitBreaker("test", failure_threshold=1)
+        cb.record_failure()
+        assert cb.is_open is True
+        cb.reset()
+        assert cb.is_open is False
+        assert cb.state == CircuitState.CLOSED
 
 
 # ── Semver Comparison ────────────────────────────────────────────────────────
