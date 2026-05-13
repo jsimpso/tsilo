@@ -110,7 +110,7 @@
 - [x] T048 [US2] Implement module listing endpoint in src/tsilo/api/modules.py: GET /api/modules with search, namespace filter, pagination (only authorized namespaces)
 - [x] T049 [US2] Create module service in src/tsilo/services/module_service.py: list_modules, search_modules, get_module_with_versions, filter by user permissions
 - [x] T050 [US2] Implement module detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:provider with version list and metrics
-- [ ] T051 [US2] Implement version detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:provider/:version with inputs, outputs, README
+- [x] T051 [US2] Implement version detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:provider/:version with inputs, outputs, README
 - [ ] T052 [P] [US2] Create static homepage in src/tsilo/static/index.html: module search, featured modules, recent activity
 - [ ] T053 [P] [US2] Create module list JavaScript in src/tsilo/static/js/main.js: fetch modules, render cards, search filtering, pagination
 - [ ] T054 [P] [US2] Create module detail JavaScript in src/tsilo/static/js/module-detail.js: fetch version details, render README (Markdown), display inputs/outputs tables, version switcher
