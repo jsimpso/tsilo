@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>{% block title %}Tsilo{% endblock %} - Terraform Module Registry</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <a class="sr-only" href="#main-content">Skip to main content</a>
+    <header class="site-header">
+        <nav class="nav-container" aria-label="Main navigation">
+            <a href="/" class="nav-logo">Tsilo</a>
+            <div class="nav-links" role="list">
+                <a href="/" class="nav-link" role="listitem">Modules</a>
+            </div>
+            <div class="nav-auth" id="nav-auth">
+                <a href="/auth/login" class="btn btn-primary btn-sm">Sign In</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content" id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 Tsilo — Private Terraform Module Registry</p>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+    <script>
+        // Set CSRF token for all fetch requests
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (csrfMeta) {
+            window.CSRF_TOKEN = csrfMeta.getAttribute('content');
+        }
+
+        // Check auth status and update nav
+        async function updateNav() {
+            try {
+                const resp = await fetch('/auth/me');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const authDiv = document.getElementById('nav-auth');
+                    if (authDiv && data.user) {
+                        authDiv.innerHTML =
+                            '<span class="nav-user">' + escapeHtml(data.user.name || data.user.email) + '</span>' +
+                            '<button class="btn btn-sm btn-outline" onclick="logout()">Sign Out</button>';
+                    }
+                }
+            } catch (e) {
+                // Not authenticated, keep sign-in link
+            }
+        }
+
+        async function logout() {
+            const resp = await fetch('/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': window.CSRF_TOKEN || ''
+                }
+            });
+            if (resp.ok) {
+                window.location.href = '/';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        updateNav();
+    </script>
+</body>
+</html>

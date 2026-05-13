@@ -1,0 +1,47 @@
+name: tsilo
+type: charm
+title: Tsilo - Terraform Module Registry
+summary: Private Terraform module registry charm
+description: |
+  A Juju charm for deploying and managing a private Terraform module
+  registry with PostgreSQL and S3 storage integration.
+
+bases:
+  - build-on:
+      - name: ubuntu
+        channel: "22.04"
+    run-on:
+      - name: ubuntu
+        channel: "22.04"
+
+requires:
+  postgresql:
+    interface: postgresql_client
+    limit: 1
+  s3-credentials:
+    interface: s3
+    limit: 1
+
+peers:
+  peer:
+    interface: tsilo-peer
+
+config:
+  options:
+    oidc-issuer:
+      type: string
+      description: OIDC provider issuer URL
+    oidc-client-id:
+      type: string
+      description: OIDC client ID
+    oidc-client-secret:
+      type: string
+      description: OIDC client secret
+    app-base-url:
+      type: string
+      default: "http://localhost:8000"
+      description: Base URL for the application
+    log-level:
+      type: string
+      default: INFO
+      description: Application log level

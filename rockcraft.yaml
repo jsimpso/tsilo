@@ -1,0 +1,27 @@
+name: tsilo
+base: ubuntu@22.04
+version: "0.1.0"
+summary: Private Terraform Module Registry
+description: |
+  A private Terraform module registry that implements the Terraform Module
+  Registry Protocol, enabling teams to host and version internal modules.
+license: Apache-2.0
+platforms:
+  amd64:
+
+services:
+  tsilo:
+    override: replace
+    command: /bin/python3 -m uvicorn tsilo.main:app --host 0.0.0.0 --port 8000
+    startup: enabled
+    environment:
+      PYTHONPATH: /app/src
+
+parts:
+  tsilo:
+    plugin: python
+    source: .
+    python-packages:
+      - .
+    stage-packages:
+      - libpq5
