@@ -109,7 +109,7 @@
 - [x] T047 [US2] Implement OIDC login endpoints in src/tsilo/api/auth.py: GET /auth/login (redirect to OIDC), GET /auth/callback (handle code, create session), POST /auth/logout, GET /auth/me
 - [x] T048 [US2] Implement module listing endpoint in src/tsilo/api/modules.py: GET /api/modules with search, namespace filter, pagination (only authorized namespaces)
 - [x] T049 [US2] Create module service in src/tsilo/services/module_service.py: list_modules, search_modules, get_module_with_versions, filter by user permissions
-- [ ] T050 [US2] Implement module detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:provider with version list and metrics
+- [x] T050 [US2] Implement module detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:provider with version list and metrics
 - [ ] T051 [US2] Implement version detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:provider/:version with inputs, outputs, README
 - [ ] T052 [P] [US2] Create static homepage in src/tsilo/static/index.html: module search, featured modules, recent activity
 - [ ] T053 [P] [US2] Create module list JavaScript in src/tsilo/static/js/main.js: fetch modules, render cards, search filtering, pagination

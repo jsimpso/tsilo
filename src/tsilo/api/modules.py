@@ -52,3 +52,42 @@ async def list_modules(
     )
 
     return ModuleListResponse(**result)
+
+
+@router.get("/{namespace}/{name}/{provider}", response_model=ModuleDetailResponse)
+async def get_module_detail(
+    namespace: str,
+    name: str,
+    provider: str,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ModuleDetailResponse:
+    """Get detailed module information with version list.
+
+    User must have read access to the module's namespace.
+    """
+    perm_service = PermissionService(db)
+    if not await perm_service.check_read_access(current_user, namespace):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You do not have read access to namespace '{namespace}'",
+        )
+
+    module_service = ModuleService(db)
+    result = await module_service.get_module_with_versions(namespace, name, provider)
+
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Module '{namespace}/{name}/{provider}' not found",
+        )
+
+    logger.info(
+        "module_detail_viewed",
+        user_id=str(current_user.id),
+        namespace=namespace,
+        module=name,
+        provider=provider,
+    )
+
+    return ModuleDetailResponse(module=result)
