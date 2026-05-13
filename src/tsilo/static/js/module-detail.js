@@ -322,11 +322,14 @@
     }
 
     // Auth nav update
+    var csrfToken = '';
+
     async function updateNav() {
         try {
             var resp = await fetch('/auth/me');
             if (resp.ok) {
                 var data = await resp.json();
+                csrfToken = resp.headers.get('X-CSRF-Token') || '';
                 var authDiv = document.getElementById('nav-auth');
                 if (authDiv && data.user) {
                     authDiv.innerHTML =
@@ -341,7 +344,10 @@
 
     window.handleLogout = async function () {
         try {
-            await fetch('/auth/logout', { method: 'POST' });
+            await fetch('/auth/logout', {
+                method: 'POST',
+                headers: { 'X-CSRF-Token': csrfToken },
+            });
         } catch (e) {
             // ignore
         }

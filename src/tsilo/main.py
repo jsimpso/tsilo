@@ -1,6 +1,9 @@
 """FastAPI application entry point - app initialization, middleware, CORS, security headers."""
 
+import hashlib
+import hmac
 import json
+import secrets
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -111,6 +114,70 @@ async def add_security_headers(request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     if not settings.is_development:
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
+
+def _generate_csrf_token(session_id: str) -> str:
+    """Generate a CSRF token tied to the user's session."""
+    return hmac.new(
+        settings.csrf_secret_key.encode(),
+        session_id.encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def _validate_csrf_token(token: str, session_id: str) -> bool:
+    """Validate a CSRF token against the session."""
+    expected = _generate_csrf_token(session_id)
+    return hmac.compare_digest(token, expected)
+
+
+# Paths exempt from CSRF validation (API token auth or public endpoints)
+_CSRF_EXEMPT_PREFIXES = (
+    "/v1/modules/",
+    "/.well-known/",
+    "/health",
+    "/metrics",
+    "/auth/login",
+    "/auth/callback",
+)
+
+_CSRF_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
+
+
+@app.middleware("http")
+async def csrf_protection(request: Request, call_next):
+    """Validate X-CSRF-Token header for state-changing requests from web UI sessions.
+
+    Bearer token authenticated requests are exempt (API/CI usage).
+    """
+    if request.method in _CSRF_METHODS:
+        path = request.url.path
+
+        # Skip CSRF for exempt paths
+        if not any(path.startswith(prefix) for prefix in _CSRF_EXEMPT_PREFIXES):
+            # Skip CSRF if request uses Bearer token auth
+            auth_header = request.headers.get("authorization", "")
+            if not auth_header.lower().startswith("bearer "):
+                # Session-based request - require CSRF token
+                session = request.session
+                session_id = session.get("user_id", "")
+                if session_id:
+                    csrf_token = request.headers.get("x-csrf-token", "")
+                    if not csrf_token or not _validate_csrf_token(csrf_token, session_id):
+                        return JSONResponse(
+                            status_code=403,
+                            content={"detail": "CSRF token missing or invalid"},
+                        )
+
+    response = await call_next(request)
+
+    # Inject CSRF token for session-authenticated HTML responses
+    session = request.session
+    session_id = session.get("user_id", "")
+    if session_id:
+        response.headers["X-CSRF-Token"] = _generate_csrf_token(session_id)
+
     return response
 
 
