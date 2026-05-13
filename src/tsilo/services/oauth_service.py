@@ -182,10 +182,7 @@ class OAuthService:
 
         stmt = delete(OAuthAuthorizationCode).where(
             (OAuthAuthorizationCode.expires_at < expired_cutoff)
-            | (
-                OAuthAuthorizationCode.used_at.isnot(None)
-                & (OAuthAuthorizationCode.used_at < used_cutoff)
-            )
+            | (OAuthAuthorizationCode.used_at.isnot(None) & (OAuthAuthorizationCode.used_at < used_cutoff))
         )
         result = await self._db.execute(stmt)
         await self._db.flush()

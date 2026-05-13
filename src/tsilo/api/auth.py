@@ -300,11 +300,13 @@ async def oauth_token(
         token_id=str(api_token.id),
     )
 
-    response_data = json.dumps({
-        "access_token": plaintext,
-        "token_type": "Bearer",
-        "expires_in": None,
-    })
+    response_data = json.dumps(
+        {
+            "access_token": plaintext,
+            "token_type": "Bearer",
+            "expires_in": None,
+        }
+    )
     return Response(
         content=response_data,
         status_code=200,
@@ -316,10 +318,12 @@ async def oauth_token(
 def _oauth_error(error: str, description: str, status_code: int) -> Response:
     """Return an OAuth 2.0 error response per RFC 6749."""
     return Response(
-        content=json.dumps({
-            "error": error,
-            "error_description": description,
-        }),
+        content=json.dumps(
+            {
+                "error": error,
+                "error_description": description,
+            }
+        ),
         status_code=status_code,
         media_type="application/json",
         headers={"Cache-Control": "no-store"},
