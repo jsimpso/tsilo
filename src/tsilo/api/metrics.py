@@ -1,11 +1,12 @@
-"""Health check and Prometheus metrics endpoints."""
+"""Health check, Prometheus metrics, and admin maintenance endpoints."""
 
 import time
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from tsilo.models import get_session_factory
+from tsilo.models import get_db, get_session_factory
 from tsilo.services.storage_service import StorageService
 
 router = APIRouter(tags=["observability"])
@@ -101,3 +102,19 @@ async def prometheus_metrics() -> Response:
         content="\n".join(lines),
         media_type="text/plain; version=0.0.4; charset=utf-8",
     )
+
+
+@router.post("/admin/cleanup-oauth-codes")
+async def cleanup_oauth_codes(
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Delete expired and used OAuth authorization codes.
+
+    Removes codes expired >24h ago and used codes older than 7 days.
+    Intended to be called hourly by a cron job or scheduler.
+    """
+    from tsilo.services.oauth_service import OAuthService
+
+    oauth_service = OAuthService(db)
+    deleted = await oauth_service.cleanup_expired_codes()
+    return {"deleted_count": deleted}
