@@ -89,11 +89,21 @@ async def health_check() -> dict:
 
 
 @router.get("/metrics")
-async def prometheus_metrics() -> Response:
+async def prometheus_metrics(
+    db: AsyncSession = Depends(get_db),
+) -> Response:
     """Prometheus-compatible metrics endpoint.
 
-    Returns metrics in Prometheus text exposition format.
+    Returns metrics in Prometheus text exposition format, including
+    per-module download counts, deprecation flags, and version distribution.
     """
+    from sqlalchemy import func, select
+
+    from tsilo.models.metric import DownloadMetric
+    from tsilo.models.module import Module
+    from tsilo.models.namespace import Namespace
+    from tsilo.models.version import ModuleVersion
+
     lines = [
         "# HELP tsilo_requests_total Total number of HTTP requests.",
         "# TYPE tsilo_requests_total counter",
@@ -108,6 +118,84 @@ async def prometheus_metrics() -> Response:
         f'tsilo_downloads_total {_metrics["downloads_total"]}',
         "",
     ]
+
+    try:
+        # Per-module download counts
+        mod_dl_stmt = (
+            select(
+                Namespace.name.label("namespace"),
+                Module.name.label("module_name"),
+                Module.provider,
+                func.coalesce(func.sum(DownloadMetric.download_count), 0).label("downloads"),
+            )
+            .outerjoin(ModuleVersion, ModuleVersion.module_id == Module.id)
+            .outerjoin(DownloadMetric, DownloadMetric.version_id == ModuleVersion.id)
+            .join(Namespace, Module.namespace_id == Namespace.id)
+            .group_by(Namespace.name, Module.name, Module.provider)
+        )
+        mod_result = await db.execute(mod_dl_stmt)
+        mod_rows = mod_result.all()
+
+        lines.append("# HELP tsilo_module_downloads_total Total downloads per module.")
+        lines.append("# TYPE tsilo_module_downloads_total gauge")
+        for row in mod_rows:
+            labels = f'namespace="{row.namespace}",name="{row.module_name}",provider="{row.provider}"'
+            lines.append(f"tsilo_module_downloads_total{{{labels}}} {row.downloads}")
+        lines.append("")
+
+        # Version count per module
+        lines.append("# HELP tsilo_module_versions_total Number of versions per module.")
+        lines.append("# TYPE tsilo_module_versions_total gauge")
+        ver_count_stmt = (
+            select(
+                Namespace.name.label("namespace"),
+                Module.name.label("module_name"),
+                Module.provider,
+                func.count(ModuleVersion.id).label("version_count"),
+            )
+            .outerjoin(ModuleVersion, ModuleVersion.module_id == Module.id)
+            .join(Namespace, Module.namespace_id == Namespace.id)
+            .group_by(Namespace.name, Module.name, Module.provider)
+        )
+        ver_result = await db.execute(ver_count_stmt)
+        for row in ver_result:
+            labels = f'namespace="{row.namespace}",name="{row.module_name}",provider="{row.provider}"'
+            lines.append(f"tsilo_module_versions_total{{{labels}}} {row.version_count}")
+        lines.append("")
+
+        # Deprecated versions count
+        metrics_service = MetricsService(db)
+        deprecated_versions = await metrics_service.flag_deprecated_versions()
+        lines.append("# HELP tsilo_deprecated_versions_total Number of deprecated module versions.")
+        lines.append("# TYPE tsilo_deprecated_versions_total gauge")
+        lines.append(f"tsilo_deprecated_versions_total {len(deprecated_versions)}")
+        lines.append("")
+
+        # Total counts
+        total_modules = (await db.execute(
+            select(func.count()).select_from(Module)
+        )).scalar() or 0
+        total_versions = (await db.execute(
+            select(func.count()).select_from(ModuleVersion)
+        )).scalar() or 0
+        total_namespaces = (await db.execute(
+            select(func.count()).select_from(Namespace)
+        )).scalar() or 0
+
+        lines.append("# HELP tsilo_modules_total Total number of modules in the registry.")
+        lines.append("# TYPE tsilo_modules_total gauge")
+        lines.append(f"tsilo_modules_total {total_modules}")
+        lines.append("")
+        lines.append("# HELP tsilo_versions_total Total number of module versions in the registry.")
+        lines.append("# TYPE tsilo_versions_total gauge")
+        lines.append(f"tsilo_versions_total {total_versions}")
+        lines.append("")
+        lines.append("# HELP tsilo_namespaces_total Total number of namespaces in the registry.")
+        lines.append("# TYPE tsilo_namespaces_total gauge")
+        lines.append(f"tsilo_namespaces_total {total_namespaces}")
+        lines.append("")
+    except Exception:
+        logger.warning("prometheus_metrics_db_query_failed", exc_info=True)
 
     return Response(
         content="\n".join(lines),
