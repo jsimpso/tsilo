@@ -1,7 +1,7 @@
 """Terraform Module Registry Protocol endpoints."""
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tsilo.middleware.auth import CurrentUser, get_current_user
@@ -13,9 +13,10 @@ from tsilo.schemas.terraform import (
     VersionsResponse,
 )
 from tsilo.services.metrics_service import MetricsService
+from tsilo.services.module_parser import ParseError
 from tsilo.services.permission_service import PermissionService
 from tsilo.services.storage_service import StorageService
-from tsilo.services.version_service import VersionService
+from tsilo.services.version_service import MAX_UPLOAD_SIZE_BYTES, VersionService
 
 logger = structlog.get_logger(__name__)
 
@@ -166,3 +167,121 @@ async def download_module(
             "Cache-Control": "no-store",
         },
     )
+
+
+@router.post("/v1/modules/{namespace}/{name}/{provider}/{version}", status_code=201)
+async def upload_module(
+    namespace: str,
+    name: str,
+    provider: str,
+    version: str,
+    file: UploadFile,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """Upload a new module version.
+
+    Accepts a multipart .tar.gz file upload. Validates the version format,
+    checks for duplicates, parses module metadata, uploads to S3, and creates
+    database records.
+    """
+    # Check write permission
+    perm_service = PermissionService(db)
+    if not await perm_service.check_write_access(current_user, namespace):
+        logger.warning(
+            "access_denied",
+            user_id=str(current_user.id),
+            namespace=namespace,
+            module=name,
+            provider=provider,
+            version=version,
+            action="upload",
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You do not have write access to namespace '{namespace}'",
+        )
+
+    # Validate semantic version format
+    if not VersionService.validate_semver(version):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid semantic version format: '{version}'. Expected format: MAJOR.MINOR.PATCH (e.g., 1.0.0)",
+        )
+
+    # Check for duplicate version
+    version_service = VersionService(db)
+    if await version_service.check_version_exists(namespace, name, provider, version):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Version '{version}' of module '{namespace}/{name}/{provider}' already exists",
+        )
+
+    # Read file data
+    file_data = await file.read()
+
+    # Check file size
+    if len(file_data) > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail=(
+                f"Module package size {len(file_data)} bytes exceeds limit "
+                f"of {MAX_UPLOAD_SIZE_BYTES} bytes (100 MB)"
+            ),
+        )
+
+    # Create version (parse, checksum, upload to S3, create DB records)
+    try:
+        result = await version_service.create_version(
+            namespace=namespace,
+            name=name,
+            provider=provider,
+            version=version,
+            file_data=file_data,
+            user_id=current_user.id,
+        )
+    except ParseError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    logger.info(
+        "module_uploaded",
+        user_id=str(current_user.id),
+        user_email=current_user.email,
+        namespace=namespace,
+        module=name,
+        provider=provider,
+        version=version,
+        package_size_bytes=len(file_data),
+    )
+
+    return Response(
+        content=_upload_response_json(result),
+        status_code=201,
+        media_type="application/json",
+    )
+
+
+def _upload_response_json(result: dict) -> str:
+    """Serialize the upload result to JSON."""
+    import json
+    return json.dumps({
+        "id": str(result["id"]),
+        "namespace": result["namespace"],
+        "name": result["name"],
+        "provider": result["provider"],
+        "version": result["version"],
+        "inputs": result["inputs"],
+        "outputs": result["outputs"],
+        "package_url": result["package_url"],
+        "package_size_bytes": result["package_size_bytes"],
+        "checksum_sha256": result["checksum_sha256"],
+        "published_at": result["published_at"],
+    })

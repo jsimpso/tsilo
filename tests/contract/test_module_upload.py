@@ -13,6 +13,7 @@ from httpx import ASGITransport, AsyncClient
 from tsilo.main import app
 from tsilo.middleware.auth import CurrentUser, get_current_user
 from tsilo.models.user import User
+from tsilo.services.module_parser import ParseError
 
 
 def _make_user(groups: list[str] | None = None) -> CurrentUser:
@@ -237,6 +238,7 @@ async def test_upload_rejects_non_gzip(client, mock_auth, mock_db):
         with patch("tsilo.api.registry.VersionService") as mock_ver_cls:
             mock_ver = AsyncMock()
             mock_ver.check_version_exists.return_value = False
+            mock_ver.create_version.side_effect = ParseError("Invalid .tar.gz archive")
             mock_ver_cls.return_value = mock_ver
 
             response = await client.post(
@@ -259,6 +261,10 @@ async def test_upload_rejects_tar_without_tf_files(client, mock_auth, mock_db):
         with patch("tsilo.api.registry.VersionService") as mock_ver_cls:
             mock_ver = AsyncMock()
             mock_ver.check_version_exists.return_value = False
+            mock_ver.create_version.side_effect = ParseError(
+                "Module package must contain at least one .tf file. "
+                "No Terraform configuration files found in the archive."
+            )
             mock_ver_cls.return_value = mock_ver
 
             tar_data = _make_tar_gz({"README.md": "# Just a readme"})
