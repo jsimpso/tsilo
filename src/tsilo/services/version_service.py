@@ -1,6 +1,9 @@
-"""Module version service - version listing, retrieval, and semantic version comparison."""
+"""Module version service - version listing, retrieval, creation, and semantic version comparison."""
 
+import hashlib
+import re
 import uuid
+from datetime import datetime, timezone
 from functools import cmp_to_key
 
 import structlog
@@ -8,11 +11,17 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
+from tsilo.models.metric import DownloadMetric
 from tsilo.models.module import Module
 from tsilo.models.namespace import Namespace
-from tsilo.models.version import ModuleVersion
+from tsilo.models.version import SEMVER_PATTERN, ModuleVersion
+from tsilo.services.module_parser import ModuleParser, ParseError
+from tsilo.services.storage_service import StorageService
 
 logger = structlog.get_logger(__name__)
+
+# Maximum upload size: 100 MB
+MAX_UPLOAD_SIZE_BYTES = 100 * 1024 * 1024
 
 
 def _semver_compare(a: str, b: str) -> int:
@@ -142,3 +151,157 @@ class VersionService:
             "checksum_sha256": module_version.checksum_sha256,
             "published_at": module_version.published_at,
         }
+
+    @staticmethod
+    def validate_semver(version: str) -> bool:
+        """Check if a version string is a valid semantic version."""
+        return SEMVER_PATTERN.match(version) is not None
+
+    async def check_version_exists(self, namespace: str, name: str, provider: str, version: str) -> bool:
+        """Check if a specific module version already exists."""
+        stmt = (
+            select(ModuleVersion.id)
+            .join(Module, ModuleVersion.module_id == Module.id)
+            .join(Namespace, Module.namespace_id == Namespace.id)
+            .where(
+                Namespace.name == namespace,
+                Module.name == name,
+                Module.provider == provider,
+                ModuleVersion.version == version,
+            )
+        )
+        result = await self._db.execute(stmt)
+        return result.scalar_one_or_none() is not None
+
+    async def create_version(
+        self,
+        namespace: str,
+        name: str,
+        provider: str,
+        version: str,
+        file_data: bytes,
+        user_id: uuid.UUID,
+    ) -> dict:
+        """Create a new module version from an uploaded package.
+
+        Handles: parsing, checksum, S3 upload, DB record + DownloadMetric.
+        Returns dict with created version details.
+        Raises ValueError for validation errors, ParseError for bad packages.
+        """
+        # Validate semver
+        if not self.validate_semver(version):
+            raise ValueError(
+                f"Invalid semantic version format: '{version}'. "
+                "Expected format: MAJOR.MINOR.PATCH (e.g., 1.0.0)"
+            )
+
+        # Check file size
+        if len(file_data) > MAX_UPLOAD_SIZE_BYTES:
+            raise OverflowError(
+                f"Module package size {len(file_data)} bytes exceeds limit "
+                f"of {MAX_UPLOAD_SIZE_BYTES} bytes (100 MB)"
+            )
+
+        # Parse module package (validates tar.gz, extracts inputs/outputs/readme)
+        parser = ModuleParser()
+        metadata = parser.parse(file_data)
+
+        # Calculate SHA256 checksum
+        checksum = hashlib.sha256(file_data).hexdigest()
+
+        # Find or create module record
+        module = await self._get_or_create_module(namespace, name, provider)
+
+        # Upload to S3
+        storage = StorageService()
+        package_url = storage.upload_module(
+            namespace, name, provider, version, file_data, checksum
+        )
+
+        # Create ModuleVersion record
+        now = datetime.now(tz=timezone.utc)
+        module_version = ModuleVersion(
+            module_id=module.id,
+            version=version,
+            inputs=metadata["inputs"],
+            outputs=metadata["outputs"],
+            readme=metadata.get("readme"),
+            package_url=package_url,
+            package_size_bytes=len(file_data),
+            checksum_sha256=checksum,
+            published_by=user_id,
+            published_at=now,
+        )
+        self._db.add(module_version)
+
+        # Create DownloadMetric record initialized to 0
+        download_metric = DownloadMetric(
+            version_id=module_version.id,
+            download_count=0,
+            last_download_at=None,
+        )
+        self._db.add(download_metric)
+
+        await self._db.flush()
+
+        logger.info(
+            "version_created",
+            namespace=namespace,
+            name=name,
+            provider=provider,
+            version=version,
+            package_size_bytes=len(file_data),
+            checksum_sha256=checksum,
+            user_id=str(user_id),
+        )
+
+        return {
+            "id": module_version.id,
+            "module_id": module.id,
+            "namespace": namespace,
+            "name": name,
+            "provider": provider,
+            "version": version,
+            "inputs": metadata["inputs"],
+            "outputs": metadata["outputs"],
+            "package_url": package_url,
+            "package_size_bytes": len(file_data),
+            "checksum_sha256": checksum,
+            "published_at": now.isoformat(),
+        }
+
+    async def _get_or_create_module(self, namespace: str, name: str, provider: str) -> Module:
+        """Get an existing module or create a new one."""
+        # Find namespace
+        ns_stmt = select(Namespace).where(Namespace.name == namespace)
+        ns_result = await self._db.execute(ns_stmt)
+        ns = ns_result.scalar_one_or_none()
+
+        if ns is None:
+            raise ValueError(f"Namespace '{namespace}' not found")
+
+        # Find or create module
+        mod_stmt = select(Module).where(
+            Module.namespace_id == ns.id,
+            Module.name == name,
+            Module.provider == provider,
+        )
+        mod_result = await self._db.execute(mod_stmt)
+        module = mod_result.scalar_one_or_none()
+
+        if module is None:
+            module = Module(
+                namespace_id=ns.id,
+                name=name,
+                provider=provider,
+            )
+            self._db.add(module)
+            await self._db.flush()
+            logger.info(
+                "module_created",
+                namespace=namespace,
+                name=name,
+                provider=provider,
+            )
+
+        return module
