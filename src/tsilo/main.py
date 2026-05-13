@@ -28,10 +28,31 @@ configure_logging(settings.log_level)
 
 app = FastAPI(
     title="Tsilo - Private Terraform Module Registry",
-    description="A private Terraform module registry with OIDC authentication and namespace-based access control.",
+    description=(
+        "A private Terraform module registry with OIDC authentication and "
+        "namespace-based access control.\n\n"
+        "## Authentication\n\n"
+        "All API endpoints (except service discovery and OpenAPI docs) require authentication.\n\n"
+        "### Bearer Token (API tokens)\n"
+        "```\nAuthorization: Bearer <api-token>\n```\n\n"
+        "### Terraform CLI\n"
+        "Run `terraform login <registry-host>` to authenticate via the OAuth 2.0 "
+        "PKCE flow. Terraform stores the token in `~/.terraform.d/credentials.tfrc.json`.\n\n"
+        "### Session (Web UI)\n"
+        "Sign in via OIDC at `/auth/login`. A session cookie is set automatically."
+    ),
     version="0.1.0",
-    docs_url="/docs" if settings.is_development else None,
-    redoc_url="/redoc" if settings.is_development else None,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_tags=[
+        {"name": "registry", "description": "Terraform Registry Protocol v1 endpoints (service discovery, versions, download, upload)."},
+        {"name": "modules", "description": "Web UI module browsing API."},
+        {"name": "namespaces", "description": "Namespace management (create, list, permissions)."},
+        {"name": "tokens", "description": "API token management (create, list, revoke)."},
+        {"name": "auth", "description": "OIDC login, callback, session, and logout."},
+        {"name": "oauth", "description": "OAuth 2.0 PKCE endpoints for Terraform CLI login."},
+        {"name": "observability", "description": "Metrics dashboard and admin endpoints."},
+    ],
 )
 
 # Rate limiter state
