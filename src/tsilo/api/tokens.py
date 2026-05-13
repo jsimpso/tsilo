@@ -11,8 +11,8 @@ from tsilo.middleware.auth import CurrentUser, get_current_user
 from tsilo.models import get_db
 from tsilo.schemas.api_token import (
     TokenCreate,
-    TokenCreateResponse,
     TokenCreatedInfo,
+    TokenCreateResponse,
     TokenInfo,
     TokenListResponse,
     TokenScopeEntry,

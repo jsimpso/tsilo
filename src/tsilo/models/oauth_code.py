@@ -1,7 +1,7 @@
 """OAuthAuthorizationCode model - temporary OAuth 2.0 authorization codes for PKCE flow."""
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
@@ -11,7 +11,7 @@ from tsilo.models import Base, generate_uuid
 
 
 class OAuthAuthorizationCode(Base):
-    """Temporary storage for OAuth 2.0 authorization codes used in Terraform CLI login with PKCE."""
+    """Temporary storage for OAuth 2.0 authorization codes (Terraform CLI PKCE)."""
 
     __tablename__ = "oauth_authorization_codes"
 
@@ -39,9 +39,8 @@ class OAuthAuthorizationCode(Base):
     @property
     def is_valid(self) -> bool:
         """Check if code is still valid (not used and not expired)."""
-        from datetime import timezone
 
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         return self.used_at is None and self.expires_at > now
 
     def __repr__(self) -> str:

@@ -1,7 +1,7 @@
 """Integration test for Terraform CLI download flow - end-to-end test."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -20,7 +20,7 @@ def _make_user(groups: list[str] | None = None) -> CurrentUser:
         email="ci@example.com",
         name="CI Pipeline",
         groups=groups or ["platform-team-developers"],
-        last_login_at=datetime.now(tz=timezone.utc),
+        last_login_at=datetime.now(tz=UTC),
     )
     return CurrentUser(user=user, auth_method="api_token")
 

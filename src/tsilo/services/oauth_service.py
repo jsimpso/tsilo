@@ -4,11 +4,11 @@ import base64
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlparse
 
 import structlog
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tsilo.models.oauth_code import OAuthAuthorizationCode
@@ -73,7 +73,7 @@ class OAuthService:
         Returns the plaintext authorization code string.
         """
         code = secrets.token_urlsafe(48)
-        expires_at = datetime.now(tz=timezone.utc) + AUTH_CODE_LIFETIME
+        expires_at = datetime.now(tz=UTC) + AUTH_CODE_LIFETIME
 
         auth_code = OAuthAuthorizationCode(
             code=code,
@@ -134,7 +134,7 @@ class OAuthService:
             raise ValueError("Authorization code has already been used")
 
         # Check expiration
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         if auth_code.expires_at <= now:
             raise ValueError("Authorization code has expired")
 
@@ -176,7 +176,7 @@ class OAuthService:
 
         Returns the number of deleted records.
         """
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         expired_cutoff = now - timedelta(hours=24)
         used_cutoff = now - timedelta(days=7)
 

@@ -1,11 +1,7 @@
 """FastAPI application entry point - app initialization, middleware, CORS, security headers."""
 
-import asyncio
 import hashlib
 import hmac
-import json
-import secrets
-import signal
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -47,7 +43,10 @@ app = FastAPI(
     openapi_tags=[
         {
             "name": "registry",
-            "description": "Terraform Registry Protocol v1 endpoints (service discovery, versions, download, upload).",
+            "description": (
+                "Terraform Registry Protocol v1 endpoints"
+                " (service discovery, versions, download, upload)."
+            ),
         },
         {"name": "modules", "description": "Web UI module browsing API."},
         {"name": "namespaces", "description": "Namespace management (create, list, permissions)."},
@@ -248,8 +247,8 @@ async def csrf_protection(request: Request, call_next):
 
 
 # Import and include routers
-from tsilo.api.auth import router as auth_router  # noqa: E402
 from tsilo.api.auth import oauth_router  # noqa: E402
+from tsilo.api.auth import router as auth_router  # noqa: E402
 from tsilo.api.metrics import router as metrics_router  # noqa: E402
 from tsilo.api.modules import router as modules_router  # noqa: E402
 from tsilo.api.namespaces import router as namespaces_router  # noqa: E402

@@ -9,7 +9,7 @@ class LoginV1Config(BaseModel):
     client: str = "terraform-cli"
     grant_types: list[str] = Field(default_factory=lambda: ["authz_code"])
     authz: str = "/oauth/authorization"
-    token: str = "/oauth/token"
+    token: str = "/oauth/token"  # noqa: S105
     ports: list[int] = Field(default_factory=lambda: [10000, 10010])
 
 

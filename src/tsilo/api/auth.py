@@ -1,4 +1,4 @@
-"""Authentication endpoints - OIDC login, callback, session, logout, OAuth 2.0 for Terraform CLI."""
+"""Authentication endpoints - OIDC login, callback, session, logout, OAuth 2.0."""
 
 import json
 from urllib.parse import urlencode
@@ -128,8 +128,6 @@ async def logout(
 @router.get("/me")
 async def me(current_user: CurrentUser = Depends(get_current_user)):
     """Get current authenticated user information."""
-    from tsilo.services.permission_service import PermissionService
-    from tsilo.models import get_db as _get_db
 
     return JSONResponse(
         content={
@@ -207,7 +205,9 @@ async def oauth_authorization(
             status_code=400,
             content={
                 "error": "invalid_request",
-                "error_description": "redirect_uri must be http://localhost with port in range 10000-10010",
+                "error_description": (
+                    "redirect_uri must be http://localhost" " with port in range 10000-10010"
+                ),
             },
         )
 

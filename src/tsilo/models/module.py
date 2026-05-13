@@ -53,4 +53,7 @@ class Module(Base, TimestampMixin):
         return value
 
     def __repr__(self) -> str:
-        return f"<Module(namespace_id={self.namespace_id}, name={self.name!r}, provider={self.provider!r})>"
+        return (
+            f"<Module(namespace_id={self.namespace_id},"
+            f" name={self.name!r}, provider={self.provider!r})>"
+        )

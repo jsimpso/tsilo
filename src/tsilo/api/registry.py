@@ -206,7 +206,10 @@ async def upload_module(
     if not VersionService.validate_semver(version):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid semantic version format: '{version}'. Expected format: MAJOR.MINOR.PATCH (e.g., 1.0.0)",
+            detail=(
+                f"Invalid semantic version format: '{version}'."
+                " Expected format: MAJOR.MINOR.PATCH (e.g., 1.0.0)"
+            ),
         )
 
     # Check for duplicate version
@@ -244,12 +247,12 @@ async def upload_module(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from None
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from None
 
     logger.info(
         "module_uploaded",

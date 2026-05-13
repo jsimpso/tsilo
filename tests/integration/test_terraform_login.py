@@ -5,14 +5,13 @@ import base64
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, patch
+from datetime import UTC, datetime
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from tsilo.main import app
-from tsilo.middleware.auth import CurrentUser, get_current_user
+from tsilo.middleware.auth import CurrentUser
 from tsilo.models.user import User
 
 
@@ -24,7 +23,7 @@ def _make_user(groups: list[str] | None = None) -> CurrentUser:
         email="test@example.com",
         name="Test User",
         groups=groups or ["platform-team-developers"],
-        last_login_at=datetime.now(tz=timezone.utc),
+        last_login_at=datetime.now(tz=UTC),
     )
     return CurrentUser(user=user, auth_method="session")
 

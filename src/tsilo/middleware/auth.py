@@ -2,7 +2,7 @@
 
 import hashlib
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tsilo.models import get_db
 from tsilo.models.api_token import APIToken
 from tsilo.models.user import User
-from tsilo.services.auth_service import AuthService
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -42,7 +41,7 @@ async def _authenticate_bearer_token(token: str, db: AsyncSession) -> CurrentUse
         return None
 
     # Update last_used_at
-    api_token.last_used_at = datetime.now(tz=timezone.utc)
+    api_token.last_used_at = datetime.now(tz=UTC)
 
     # Load the user
     user_stmt = select(User).where(User.id == api_token.user_id)

@@ -1,7 +1,7 @@
 """Metrics service - download count tracking, system metrics, deprecation detection."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from functools import cmp_to_key
 
 import structlog
@@ -31,7 +31,7 @@ class MetricsService:
 
         Updates download_count and last_download_at timestamp.
         """
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         stmt = (
             update(DownloadMetric)
             .where(DownloadMetric.version_id == version_id)
@@ -50,7 +50,7 @@ class MetricsService:
 
     async def get_system_metrics(self) -> dict:
         """Get system-wide metrics for admin overview dashboard."""
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         thirty_days_ago = now - timedelta(days=30)
 
         # Total modules
@@ -224,7 +224,7 @@ class MetricsService:
         Since we only track aggregate counts, this returns a simplified
         view based on last_download_at timestamps.
         """
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         thirty_days_ago = now - timedelta(days=30)
 
         # Get versions with recent downloads
@@ -262,7 +262,7 @@ class MetricsService:
         """
         if last_download_at is None:
             return False
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         return (now - last_download_at).days > DEPRECATION_THRESHOLD_DAYS
 
     async def flag_deprecated_versions(self) -> list[dict]:
@@ -270,7 +270,7 @@ class MetricsService:
 
         Returns a list of deprecated version info dicts.
         """
-        threshold = datetime.now(tz=timezone.utc) - timedelta(days=DEPRECATION_THRESHOLD_DAYS)
+        threshold = datetime.now(tz=UTC) - timedelta(days=DEPRECATION_THRESHOLD_DAYS)
 
         stmt = (
             select(

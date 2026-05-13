@@ -34,7 +34,7 @@ async def test_service_discovery_returns_login_v1(client):
     assert login["client"] == "terraform-cli"
     assert login["grant_types"] == ["authz_code"]
     assert login["authz"] == "/oauth/authorization"
-    assert login["token"] == "/oauth/token"
+    assert login["token"] == "/oauth/token"  # noqa: S105
     assert login["ports"] == [10000, 10010]
 
 

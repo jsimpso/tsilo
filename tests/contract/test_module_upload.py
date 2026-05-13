@@ -4,8 +4,8 @@ duplicate rejection, and permission enforcement."""
 import io
 import tarfile
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -24,7 +24,7 @@ def _make_user(groups: list[str] | None = None) -> CurrentUser:
         email="test@example.com",
         name="Test User",
         groups=groups or ["platform-team-developers"],
-        last_login_at=datetime.now(tz=timezone.utc),
+        last_login_at=datetime.now(tz=UTC),
     )
     return CurrentUser(user=user, auth_method="api_token")
 
@@ -38,8 +38,12 @@ def _make_tar_gz(files: dict[str, str] | None = None) -> bytes:
     if files is None:
         files = {
             "main.tf": 'resource "null_resource" "example" {}',
-            "variables.tf": 'variable "name" {\n  type = string\n  description = "The name"\n}',
-            "outputs.tf": 'output "id" {\n  value = null_resource.example.id\n  description = "The ID"\n}',
+            "variables.tf": (
+                'variable "name" {\n  type = string' '\n  description = "The name"\n}'
+            ),
+            "outputs.tf": (
+                'output "id" {\n  value = null_resource.example.id' '\n  description = "The ID"\n}'
+            ),
             "README.md": "# Test Module\n\nA test module.",
         }
     buf = io.BytesIO()
@@ -208,7 +212,7 @@ async def test_upload_success_returns_201(client, mock_auth, mock_db):
                 "package_url": "s3://tsilo-modules/platform-team/vpc/aws/1.0.0/module.tar.gz",
                 "package_size_bytes": 1024,
                 "checksum_sha256": "a" * 64,
-                "published_at": datetime.now(tz=timezone.utc).isoformat(),
+                "published_at": datetime.now(tz=UTC).isoformat(),
             }
             mock_ver_cls.return_value = mock_ver
 
