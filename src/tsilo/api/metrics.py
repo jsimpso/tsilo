@@ -1,13 +1,24 @@
-"""Health check, Prometheus metrics, and admin maintenance endpoints."""
+"""Health check, Prometheus metrics, admin metrics, and maintenance endpoints."""
 
 import time
 
-from fastapi import APIRouter, Depends, Response
+import structlog
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tsilo.config import get_settings
+from tsilo.middleware.auth import CurrentUser, get_current_user
 from tsilo.models import get_db, get_session_factory
+from tsilo.schemas.metrics import (
+    MetricsOverviewResponse,
+    ModuleMetricsResponse,
+)
+from tsilo.services.metrics_service import MetricsService
+from tsilo.services.permission_service import PermissionService
 from tsilo.services.storage_service import StorageService
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(tags=["observability"])
 
@@ -118,3 +129,81 @@ async def cleanup_oauth_codes(
     oauth_service = OAuthService(db)
     deleted = await oauth_service.cleanup_expired_codes()
     return {"deleted_count": deleted}
+
+
+def _is_admin(user: CurrentUser) -> bool:
+    """Check if the current user is an admin."""
+    settings = get_settings()
+    return settings.admin_group in (user.groups or [])
+
+
+@router.get("/api/metrics/overview", response_model=MetricsOverviewResponse)
+async def metrics_overview(
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> MetricsOverviewResponse:
+    """Get system-wide metrics (admin only).
+
+    Returns total modules, versions, namespaces, downloads,
+    top modules, and namespace usage breakdown.
+    """
+    if not _is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required for system metrics overview",
+        )
+
+    metrics_service = MetricsService(db)
+    data = await metrics_service.get_system_metrics()
+
+    logger.info(
+        "metrics_overview_viewed",
+        user_id=str(current_user.id),
+    )
+
+    return MetricsOverviewResponse(metrics=data)
+
+
+@router.get(
+    "/api/metrics/modules/{namespace}/{name}/{provider}",
+    response_model=ModuleMetricsResponse,
+)
+async def module_metrics(
+    namespace: str,
+    name: str,
+    provider: str,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> ModuleMetricsResponse:
+    """Get detailed metrics for a specific module.
+
+    User must have read access to the module's namespace.
+    """
+    perm_service = PermissionService(db)
+    if not await perm_service.check_read_access(current_user, namespace):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You do not have read access to namespace '{namespace}'",
+        )
+
+    metrics_service = MetricsService(db)
+    data = await metrics_service.get_module_metrics(namespace, name, provider)
+
+    if data is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Module '{namespace}/{name}/{provider}' not found",
+        )
+
+    logger.info(
+        "module_metrics_viewed",
+        user_id=str(current_user.id),
+        namespace=namespace,
+        module=name,
+        provider=provider,
+    )
+
+    return ModuleMetricsResponse(
+        module={"namespace": namespace, "name": name, "provider": provider},
+        metrics=data,
+    )
