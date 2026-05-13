@@ -22,6 +22,10 @@ requires:
     interface: s3
     limit: 1
 
+peers:
+  peer:
+    interface: tsilo-peer
+
 config:
   options:
     oidc-issuer:
