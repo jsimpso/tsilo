@@ -1,13 +1,68 @@
-"""Unit tests for service-layer business logic (module parser, semver, version service)."""
+"""Unit tests for service-layer business logic (module parser, semver, version service, cache)."""
 
 import io
 import tarfile
+import time
 
 import pytest
 
+from tsilo.services.cache import TTLCache
 from tsilo.services.module_parser import ModuleParser, ParseError
 from tsilo.services.version_service import VersionService, _semver_compare
 
+
+# ── TTL Cache ────────────────────────────────────────────────────────────────
+
+
+class TestTTLCache:
+    def test_get_set(self):
+        cache = TTLCache(default_ttl=60.0)
+        cache.set("key", "value")
+        assert cache.get("key") == "value"
+
+    def test_get_missing_key(self):
+        cache = TTLCache(default_ttl=60.0)
+        assert cache.get("missing") is None
+
+    def test_expired_entry(self):
+        cache = TTLCache(default_ttl=0.01)
+        cache.set("key", "value")
+        time.sleep(0.02)
+        assert cache.get("key") is None
+
+    def test_invalidate(self):
+        cache = TTLCache(default_ttl=60.0)
+        cache.set("key", "value")
+        cache.invalidate("key")
+        assert cache.get("key") is None
+
+    def test_clear(self):
+        cache = TTLCache(default_ttl=60.0)
+        cache.set("a", 1)
+        cache.set("b", 2)
+        cache.clear()
+        assert cache.get("a") is None
+        assert cache.get("b") is None
+
+    def test_max_size_eviction(self):
+        cache = TTLCache(default_ttl=60.0, max_size=2)
+        cache.set("a", 1)
+        cache.set("b", 2)
+        cache.set("c", 3)  # evicts "a"
+        assert cache.get("a") is None
+        assert cache.get("b") == 2
+        assert cache.get("c") == 3
+
+    def test_custom_ttl(self):
+        cache = TTLCache(default_ttl=60.0)
+        cache.set("short", "val", ttl=0.01)
+        time.sleep(0.02)
+        assert cache.get("short") is None
+
+    def test_boolean_false_cached(self):
+        cache = TTLCache(default_ttl=60.0)
+        cache.set("perm", False)
+        assert cache.get("perm") is False
 
 # ── Semver Comparison ────────────────────────────────────────────────────────
 
@@ -43,6 +98,7 @@ class TestSemverCompare:
     def test_sorting_descending(self):
         versions = ["1.0.0", "2.1.0", "1.0.1", "2.0.0", "0.9.0"]
         from functools import cmp_to_key
+
         sorted_desc = sorted(versions, key=cmp_to_key(_semver_compare), reverse=True)
         assert sorted_desc == ["2.1.0", "2.0.0", "1.0.1", "1.0.0", "0.9.0"]
 
@@ -84,9 +140,10 @@ class TestModuleParser:
         self.parser = ModuleParser()
 
     def test_parse_simple_module(self):
-        archive = _make_tar_gz({
-            "module/main.tf": 'resource "null_resource" "test" {}',
-            "module/variables.tf": '''
+        archive = _make_tar_gz(
+            {
+                "module/main.tf": 'resource "null_resource" "test" {}',
+                "module/variables.tf": """
 variable "name" {
   type        = string
   description = "The name"
@@ -97,14 +154,15 @@ variable "count" {
   description = "Number of instances"
   default     = 1
 }
-''',
-            "module/outputs.tf": '''
+""",
+                "module/outputs.tf": """
 output "id" {
   description = "The resource ID"
 }
-''',
-            "module/README.md": "# My Module\n\nA test module.",
-        })
+""",
+                "module/README.md": "# My Module\n\nA test module.",
+            }
+        )
 
         result = self.parser.parse(archive)
 
@@ -123,9 +181,11 @@ output "id" {
         assert result["readme"] == "# My Module\n\nA test module."
 
     def test_parse_no_tf_files_raises(self):
-        archive = _make_tar_gz({
-            "module/README.md": "# Just a readme",
-        })
+        archive = _make_tar_gz(
+            {
+                "module/README.md": "# Just a readme",
+            }
+        )
         with pytest.raises(ParseError, match="at least one .tf file"):
             self.parser.parse(archive)
 
@@ -134,36 +194,42 @@ output "id" {
             self.parser.parse(b"not a tar.gz file")
 
     def test_parse_empty_tf_file(self):
-        archive = _make_tar_gz({
-            "module/main.tf": "",
-        })
+        archive = _make_tar_gz(
+            {
+                "module/main.tf": "",
+            }
+        )
         result = self.parser.parse(archive)
         assert result["inputs"] == []
         assert result["outputs"] == []
         assert result["readme"] is None
 
     def test_parse_no_readme(self):
-        archive = _make_tar_gz({
-            "module/main.tf": 'resource "null_resource" "test" {}',
-        })
+        archive = _make_tar_gz(
+            {
+                "module/main.tf": 'resource "null_resource" "test" {}',
+            }
+        )
         result = self.parser.parse(archive)
         assert result["readme"] is None
 
     def test_parse_deduplicates_variables(self):
-        archive = _make_tar_gz({
-            "module/main.tf": '''
+        archive = _make_tar_gz(
+            {
+                "module/main.tf": """
 variable "name" {
   type = string
   description = "First"
 }
-''',
-            "module/variables.tf": '''
+""",
+                "module/variables.tf": """
 variable "name" {
   type = string
   description = "Second"
 }
-''',
-        })
+""",
+            }
+        )
         result = self.parser.parse(archive)
         # Should keep the first occurrence
         assert len(result["inputs"]) == 1
@@ -192,25 +258,29 @@ variable "name" {
         assert "evil" not in evil_names
 
     def test_parse_variable_without_description(self):
-        archive = _make_tar_gz({
-            "module/variables.tf": '''
+        archive = _make_tar_gz(
+            {
+                "module/variables.tf": """
 variable "simple" {
   type = string
 }
-''',
-        })
+""",
+            }
+        )
         result = self.parser.parse(archive)
         assert len(result["inputs"]) == 1
         assert result["inputs"][0]["description"] is None
 
     def test_parse_output_without_description(self):
-        archive = _make_tar_gz({
-            "module/outputs.tf": '''
+        archive = _make_tar_gz(
+            {
+                "module/outputs.tf": """
 output "bare" {
   value = "hello"
 }
-''',
-        })
+""",
+            }
+        )
         result = self.parser.parse(archive)
         assert len(result["outputs"]) == 1
         assert result["outputs"][0]["description"] is None

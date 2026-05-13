@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tsilo.middleware.auth import CurrentUser
 from tsilo.models.namespace import Namespace
 from tsilo.models.permission import NamespacePermission, PermissionLevel
+from tsilo.services.cache import permission_cache
 
 
 class PermissionService:
@@ -20,10 +21,15 @@ class PermissionService:
         """Check if user has read access to a namespace.
 
         A user has read access if any of their groups has read or write
-        permission on the namespace.
+        permission on the namespace. Results are cached for 1 minute.
         """
         if not user.groups:
             return False
+
+        cache_key = f"read:{namespace_name}:{','.join(sorted(user.groups))}"
+        cached = permission_cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         stmt = (
             select(NamespacePermission)
@@ -37,16 +43,23 @@ class PermissionService:
             )
         )
         result = await self._db.execute(stmt)
-        return result.scalar_one_or_none() is not None
+        has_access = result.scalar_one_or_none() is not None
+        permission_cache.set(cache_key, has_access)
+        return has_access
 
     async def check_write_access(self, user: CurrentUser, namespace_name: str) -> bool:
         """Check if user has write access to a namespace.
 
         A user has write access if any of their groups has write permission
-        on the namespace.
+        on the namespace. Results are cached for 1 minute.
         """
         if not user.groups:
             return False
+
+        cache_key = f"write:{namespace_name}:{','.join(sorted(user.groups))}"
+        cached = permission_cache.get(cache_key)
+        if cached is not None:
+            return cached
 
         stmt = (
             select(NamespacePermission)
@@ -60,7 +73,9 @@ class PermissionService:
             )
         )
         result = await self._db.execute(stmt)
-        return result.scalar_one_or_none() is not None
+        has_access = result.scalar_one_or_none() is not None
+        permission_cache.set(cache_key, has_access)
+        return has_access
 
     async def get_user_readable_namespaces(self, user: CurrentUser) -> list[str]:
         """Get list of namespace names the user can read."""
@@ -142,6 +157,9 @@ class PermissionService:
         self._db.add(perm)
         await self._db.flush()
 
+        # Invalidate permission cache for this namespace
+        permission_cache.clear()
+
         return {
             "id": perm.id,
             "group_name": perm.group_name,
@@ -174,4 +192,8 @@ class PermissionService:
 
         await self._db.delete(perm)
         await self._db.flush()
+
+        # Invalidate permission cache for this namespace
+        permission_cache.clear()
+
         return True

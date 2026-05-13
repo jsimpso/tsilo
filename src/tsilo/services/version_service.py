@@ -17,6 +17,7 @@ from tsilo.models.namespace import Namespace
 from tsilo.models.version import SEMVER_PATTERN, ModuleVersion
 from tsilo.services.module_parser import ModuleParser, ParseError
 from tsilo.services.storage_service import StorageService
+from tsilo.services.cache import module_cache
 
 logger = structlog.get_logger(__name__)
 
@@ -72,7 +73,13 @@ class VersionService:
 
         Returns None if the module does not exist.
         Returns an empty list if the module exists but has no versions.
+        Results are cached for 5 minutes.
         """
+        cache_key = f"versions:{namespace}/{name}/{provider}"
+        cached = module_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
         # Find the module
         stmt = (
             select(Module)
@@ -102,6 +109,9 @@ class VersionService:
 
         # Sort in descending semantic version order
         versions.sort(key=cmp_to_key(_semver_compare), reverse=True)
+
+        # Cache the result
+        module_cache.set(cache_key, versions)
 
         logger.info(
             "versions_listed",
@@ -240,6 +250,9 @@ class VersionService:
         self._db.add(download_metric)
 
         await self._db.flush()
+
+        # Invalidate cached version list for this module
+        module_cache.invalidate(f"versions:{namespace}/{name}/{provider}")
 
         logger.info(
             "version_created",

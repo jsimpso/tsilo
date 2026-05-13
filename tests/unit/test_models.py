@@ -14,7 +14,6 @@ from tsilo.models.permission import NamespacePermission, PermissionLevel
 from tsilo.models.user import User
 from tsilo.models.version import SEMVER_PATTERN, ModuleVersion
 
-
 # ── Namespace Validation ─────────────────────────────────────────────────────
 
 
