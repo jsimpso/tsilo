@@ -140,7 +140,7 @@
                     ' <button class="btn btn-sm" onclick="fetch(\'/auth/logout\',{method:\'POST\',credentials:\'same-origin\'}).then(function(){location.reload()})">Sign Out</button>';
             }
         })
-        .catch(function () {});
+        .catch(function () { });
 
     loadMetrics();
 })();

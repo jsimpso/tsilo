@@ -54,38 +54,32 @@ class MetricsService:
         thirty_days_ago = now - timedelta(days=30)
 
         # Total modules
-        total_modules = (await self._db.execute(
-            select(func.count()).select_from(Module)
-        )).scalar() or 0
+        total_modules = (await self._db.execute(select(func.count()).select_from(Module))).scalar() or 0
 
         # Total versions
-        total_versions = (await self._db.execute(
-            select(func.count()).select_from(ModuleVersion)
-        )).scalar() or 0
+        total_versions = (await self._db.execute(select(func.count()).select_from(ModuleVersion))).scalar() or 0
 
         # Total namespaces
-        total_namespaces = (await self._db.execute(
-            select(func.count()).select_from(Namespace)
-        )).scalar() or 0
+        total_namespaces = (await self._db.execute(select(func.count()).select_from(Namespace))).scalar() or 0
 
         # Total downloads
-        total_downloads = (await self._db.execute(
-            select(func.coalesce(func.sum(DownloadMetric.download_count), 0))
-        )).scalar() or 0
+        total_downloads = (
+            await self._db.execute(select(func.coalesce(func.sum(DownloadMetric.download_count), 0)))
+        ).scalar() or 0
 
         # Downloads in last 30 days (approximation: versions with last_download_at in range)
-        downloads_last_30 = (await self._db.execute(
-            select(func.coalesce(func.sum(DownloadMetric.download_count), 0)).where(
-                DownloadMetric.last_download_at >= thirty_days_ago
+        downloads_last_30 = (
+            await self._db.execute(
+                select(func.coalesce(func.sum(DownloadMetric.download_count), 0)).where(
+                    DownloadMetric.last_download_at >= thirty_days_ago
+                )
             )
-        )).scalar() or 0
+        ).scalar() or 0
 
         # Active users last 30 days
-        active_users = (await self._db.execute(
-            select(func.count()).select_from(User).where(
-                User.last_login_at >= thirty_days_ago
-            )
-        )).scalar() or 0
+        active_users = (
+            await self._db.execute(select(func.count()).select_from(User).where(User.last_login_at >= thirty_days_ago))
+        ).scalar() or 0
 
         # Top modules by total downloads
         top_modules_stmt = (
@@ -149,9 +143,7 @@ class MetricsService:
             "namespace_usage": namespace_usage,
         }
 
-    async def get_module_metrics(
-        self, namespace: str, name: str, provider: str
-    ) -> dict | None:
+    async def get_module_metrics(self, namespace: str, name: str, provider: str) -> dict | None:
         """Get detailed metrics for a specific module.
 
         Returns None if the module is not found.
@@ -192,18 +184,18 @@ class MetricsService:
             total_downloads += dl_count
             deprecated = self._is_deprecated(last_dl)
 
-            downloads_by_version.append({
-                "version": v.version,
-                "download_count": dl_count,
-                "last_download_at": last_dl,
-                "deprecated": deprecated,
-            })
+            downloads_by_version.append(
+                {
+                    "version": v.version,
+                    "download_count": dl_count,
+                    "last_download_at": last_dl,
+                    "deprecated": deprecated,
+                }
+            )
 
         # Sort versions descending by semver
         downloads_by_version.sort(
-            key=cmp_to_key(
-                lambda a, b: _semver_compare(a["version"], b["version"])
-            ),
+            key=cmp_to_key(lambda a, b: _semver_compare(a["version"], b["version"])),
             reverse=True,
         )
 
@@ -248,10 +240,7 @@ class MetricsService:
                 date_counts[date_str] = date_counts.get(date_str, 0) + row.download_count
 
         # Sort by date descending
-        return [
-            {"date": date, "count": count}
-            for date, count in sorted(date_counts.items(), reverse=True)
-        ]
+        return [{"date": date, "count": count} for date, count in sorted(date_counts.items(), reverse=True)]
 
     def _is_deprecated(self, last_download_at: datetime | None) -> bool:
         """Check if a version should be flagged as deprecated.
@@ -268,9 +257,7 @@ class MetricsService:
 
         Returns a list of deprecated version info dicts.
         """
-        threshold = datetime.now(tz=timezone.utc) - timedelta(
-            days=DEPRECATION_THRESHOLD_DAYS
-        )
+        threshold = datetime.now(tz=timezone.utc) - timedelta(days=DEPRECATION_THRESHOLD_DAYS)
 
         stmt = (
             select(
@@ -290,14 +277,16 @@ class MetricsService:
         result = await self._db.execute(stmt)
         deprecated = []
         for row in result:
-            deprecated.append({
-                "version_id": str(row.id),
-                "version": row.version,
-                "module": row.module_name,
-                "namespace": row.namespace,
-                "provider": row.provider,
-                "last_download_at": row.last_download_at.isoformat() if row.last_download_at else None,
-            })
+            deprecated.append(
+                {
+                    "version_id": str(row.id),
+                    "version": row.version,
+                    "module": row.module_name,
+                    "namespace": row.namespace,
+                    "provider": row.provider,
+                    "last_download_at": row.last_download_at.isoformat() if row.last_download_at else None,
+                }
+            )
 
         logger.info(
             "deprecated_versions_flagged",

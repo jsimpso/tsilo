@@ -172,15 +172,9 @@ async def prometheus_metrics(
         lines.append("")
 
         # Total counts
-        total_modules = (await db.execute(
-            select(func.count()).select_from(Module)
-        )).scalar() or 0
-        total_versions = (await db.execute(
-            select(func.count()).select_from(ModuleVersion)
-        )).scalar() or 0
-        total_namespaces = (await db.execute(
-            select(func.count()).select_from(Namespace)
-        )).scalar() or 0
+        total_modules = (await db.execute(select(func.count()).select_from(Module))).scalar() or 0
+        total_versions = (await db.execute(select(func.count()).select_from(ModuleVersion))).scalar() or 0
+        total_namespaces = (await db.execute(select(func.count()).select_from(Namespace))).scalar() or 0
 
         lines.append("# HELP tsilo_modules_total Total number of modules in the registry.")
         lines.append("# TYPE tsilo_modules_total gauge")
