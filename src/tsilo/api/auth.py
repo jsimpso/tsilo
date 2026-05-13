@@ -91,14 +91,16 @@ async def callback(
     # Check if there's a pending OAuth authorization request (Terraform CLI login)
     oauth_request = request.session.pop("oauth_request", None)
     if oauth_request:
-        params = urlencode({
-            "client_id": oauth_request["client_id"],
-            "code_challenge": oauth_request["code_challenge"],
-            "code_challenge_method": oauth_request["code_challenge_method"],
-            "redirect_uri": oauth_request["redirect_uri"],
-            "response_type": "code",
-            "state": oauth_request["state"],
-        })
+        params = urlencode(
+            {
+                "client_id": oauth_request["client_id"],
+                "code_challenge": oauth_request["code_challenge"],
+                "code_challenge_method": oauth_request["code_challenge_method"],
+                "redirect_uri": oauth_request["redirect_uri"],
+                "response_type": "code",
+                "state": oauth_request["state"],
+            }
+        )
         return RedirectResponse(url=f"/oauth/authorization?{params}", status_code=302)
 
     return RedirectResponse(url="/", status_code=302)
@@ -238,3 +240,87 @@ async def oauth_authorization(
     # Redirect back to CLI with code and state
     params = urlencode({"code": code, "state": state})
     return RedirectResponse(url=f"{redirect_uri}?{params}", status_code=302)
+
+
+@oauth_router.post("/token")
+async def oauth_token(
+    grant_type: str = Form(default=None),
+    code: str = Form(default=None),
+    redirect_uri: str = Form(default=None),
+    client_id: str = Form(default=None),
+    code_verifier: str = Form(default=None),
+    db: AsyncSession = Depends(get_db),
+) -> Response:
+    """OAuth 2.0 token endpoint - exchange authorization code for access token.
+
+    Validates PKCE code_verifier against the stored code_challenge,
+    then creates an API token for the user.
+    """
+    # Validate grant_type
+    if not grant_type:
+        return _oauth_error("invalid_request", "grant_type is required", 400)
+    if grant_type != "authorization_code":
+        return _oauth_error("unsupported_grant_type", f"Unsupported grant type: {grant_type}", 400)
+
+    # Validate required fields
+    if not code:
+        return _oauth_error("invalid_request", "code is required", 400)
+    if not code_verifier:
+        return _oauth_error("invalid_request", "code_verifier is required for PKCE", 400)
+
+    # Exchange the authorization code (validates PKCE, single-use, expiry)
+    oauth_service = OAuthService(db)
+    try:
+        auth_code = await oauth_service.exchange_code(
+            code=code,
+            client_id=client_id or "terraform-cli",
+            redirect_uri=redirect_uri or "",
+            code_verifier=code_verifier,
+        )
+    except ValueError as e:
+        error_msg = str(e)
+        logger.warning("oauth_token_exchange_failed", error=error_msg)
+        return _oauth_error("invalid_grant", error_msg, 400)
+
+    # Create an API token for the user (no expiry per Terraform CLI spec)
+    from tsilo.services.token_service import TokenService
+
+    token_service = TokenService(db)
+    api_token, plaintext = await token_service.create_token(
+        user_id=auth_code.user_id,
+        name=f"Terraform CLI ({client_id or 'terraform-cli'})",
+        scopes=auth_code.scopes,
+        expires_in_days=None,  # No expiry for Terraform CLI tokens
+    )
+
+    logger.info(
+        "oauth_token_issued",
+        user_id=str(auth_code.user_id),
+        client_id=client_id,
+        token_id=str(api_token.id),
+    )
+
+    response_data = json.dumps({
+        "access_token": plaintext,
+        "token_type": "Bearer",
+        "expires_in": None,
+    })
+    return Response(
+        content=response_data,
+        status_code=200,
+        media_type="application/json",
+        headers={"Cache-Control": "no-store"},
+    )
+
+
+def _oauth_error(error: str, description: str, status_code: int) -> Response:
+    """Return an OAuth 2.0 error response per RFC 6749."""
+    return Response(
+        content=json.dumps({
+            "error": error,
+            "error_description": description,
+        }),
+        status_code=status_code,
+        media_type="application/json",
+        headers={"Cache-Control": "no-store"},
+    )
