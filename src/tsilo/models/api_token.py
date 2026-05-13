@@ -1,7 +1,7 @@
 """APIToken model - credentials for CI/CD pipeline authentication."""
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.dialects.postgresql import JSONB
@@ -35,9 +35,8 @@ class APIToken(Base):
     @property
     def is_valid(self) -> bool:
         """Check if token is still valid (not expired and not revoked)."""
-        from datetime import timezone
 
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         return self.expires_at > now and self.revoked_at is None
 
     def __repr__(self) -> str:

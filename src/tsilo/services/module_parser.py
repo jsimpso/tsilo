@@ -45,12 +45,10 @@ class ModuleParser:
         Raises ParseError if the archive is invalid or contains no .tf files.
         """
         try:
-            tar_file = tarfile.open(fileobj=io.BytesIO(file_data), mode="r:gz")
+            with tarfile.open(fileobj=io.BytesIO(file_data), mode="r:gz") as tar_file:
+                return self._extract_metadata(tar_file)
         except (tarfile.TarError, EOFError, OSError) as e:
-            raise ParseError(f"Invalid .tar.gz archive: {e}")
-
-        with tar_file:
-            return self._extract_metadata(tar_file)
+            raise ParseError(f"Invalid .tar.gz archive: {e}") from e
 
     def _extract_metadata(self, tar: tarfile.TarFile) -> dict:
         """Extract inputs, outputs, and README from tar archive members."""

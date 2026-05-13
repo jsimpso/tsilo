@@ -65,7 +65,7 @@ async def test_module_metrics_endpoint_requires_auth(client):
 
 @pytest.mark.asyncio
 async def test_download_metric_created_on_version_upload(client):
-    """When a module version is uploaded, a DownloadMetric record with count=0 should be created."""
+    """Verify a DownloadMetric record with count=0 is created on upload."""
     # Upload requires auth, so we verify endpoint existence
     response = await client.post(
         "/v1/modules/platform-team/vpc/aws/1.0.0",

@@ -1,7 +1,5 @@
 """Integration test for web UI auth flow - OIDC login, callback, session, logout."""
 
-from unittest.mock import AsyncMock, patch
-
 import pytest
 from httpx import ASGITransport, AsyncClient
 

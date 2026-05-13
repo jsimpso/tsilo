@@ -1,10 +1,8 @@
 """Integration test for API token authentication - create token, use in
 Terraform CLI credentials, download module."""
 
-import hashlib
 import uuid
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
+from datetime import UTC, datetime
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -22,7 +20,7 @@ def _make_user(groups: list[str] | None = None) -> CurrentUser:
         email="test@example.com",
         name="Test User",
         groups=groups or ["platform-team-developers"],
-        last_login_at=datetime.now(tz=timezone.utc),
+        last_login_at=datetime.now(tz=UTC),
     )
     return CurrentUser(user=user, auth_method="session")
 

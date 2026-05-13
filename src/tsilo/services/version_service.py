@@ -1,9 +1,8 @@
-"""Module version service - version listing, retrieval, creation, and semantic version comparison."""
+"""Version service - listing, retrieval, creation, and semver comparison."""
 
 import hashlib
-import re
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from functools import cmp_to_key
 
 import structlog
@@ -15,9 +14,9 @@ from tsilo.models.metric import DownloadMetric
 from tsilo.models.module import Module
 from tsilo.models.namespace import Namespace
 from tsilo.models.version import SEMVER_PATTERN, ModuleVersion
-from tsilo.services.module_parser import ModuleParser, ParseError
-from tsilo.services.storage_service import StorageService
 from tsilo.services.cache import module_cache
+from tsilo.services.module_parser import ModuleParser
+from tsilo.services.storage_service import StorageService
 
 logger = structlog.get_logger(__name__)
 
@@ -233,7 +232,7 @@ class VersionService:
         )
 
         # Create ModuleVersion record
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         module_version = ModuleVersion(
             module_id=module.id,
             version=version,

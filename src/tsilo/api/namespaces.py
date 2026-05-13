@@ -73,7 +73,7 @@ async def create_namespace(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),
-        )
+        ) from None
 
     await db.commit()
 
@@ -102,12 +102,13 @@ async def list_namespace_permissions(
     perm_service = PermissionService(db)
 
     # Check access: admin or user with any access to namespace
-    if not _is_admin(current_user):
-        if not await perm_service.check_read_access(current_user, namespace):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"You do not have access to namespace '{namespace}'",
-            )
+    if not _is_admin(current_user) and not await perm_service.check_read_access(
+        current_user, namespace
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You do not have access to namespace '{namespace}'",
+        )
 
     ns_service = NamespaceService(db)
     ns = await ns_service.get_namespace_by_name(namespace)
@@ -166,7 +167,7 @@ async def create_permission(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),
-        )
+        ) from None
 
     await db.commit()
 

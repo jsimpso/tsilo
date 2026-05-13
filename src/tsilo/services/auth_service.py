@@ -1,6 +1,6 @@
 """OIDC authentication service - OAuth client configuration and token validation."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 from authlib.integrations.starlette_client import OAuth
@@ -50,14 +50,14 @@ class AuthService:
                 email=email,
                 name=name,
                 groups=groups or [],
-                last_login_at=datetime.now(tz=timezone.utc),
+                last_login_at=datetime.now(tz=UTC),
             )
             self._db.add(user)
         else:
             user.email = email
             user.name = name
             user.groups = groups or []
-            user.last_login_at = datetime.now(tz=timezone.utc)
+            user.last_login_at = datetime.now(tz=UTC)
 
         await self._db.flush()
         return user

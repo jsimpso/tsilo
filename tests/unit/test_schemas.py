@@ -1,7 +1,7 @@
 """Unit tests for Pydantic schema validation."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -9,12 +9,10 @@ from pydantic import ValidationError
 from tsilo.schemas.api_token import TokenCreate, TokenScopeEntry
 from tsilo.schemas.metrics import (
     MetricsOverviewData,
-    ModuleMetricsData,
     TopModule,
     VersionDownloadInfo,
 )
 from tsilo.schemas.module import (
-    ModuleDetail,
     ModuleListItem,
     ModuleListResponse,
     ModuleVersionSummary,
@@ -82,7 +80,7 @@ class TestModuleListItem:
         assert item.total_downloads == 0
 
     def test_full(self):
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         item = ModuleListItem(
             id=uuid.uuid4(),
             namespace="team",
@@ -101,7 +99,7 @@ class TestModuleVersionSummary:
     def test_defaults(self):
         vs = ModuleVersionSummary(
             version="1.0.0",
-            published_at=datetime.now(tz=timezone.utc),
+            published_at=datetime.now(tz=UTC),
         )
         assert vs.download_count == 0
         assert vs.deprecated is False
@@ -110,7 +108,7 @@ class TestModuleVersionSummary:
     def test_deprecated_version(self):
         vs = ModuleVersionSummary(
             version="0.1.0",
-            published_at=datetime.now(tz=timezone.utc),
+            published_at=datetime.now(tz=UTC),
             deprecated=True,
             deprecation_reason="No downloads in 90+ days",
         )
@@ -226,7 +224,7 @@ class TestTokenRequest:
 class TestTokenResponse:
     def test_default_token_type(self):
         resp = TokenResponse(access_token="abc123")
-        assert resp.token_type == "Bearer"
+        assert resp.token_type == "Bearer"  # noqa: S105
         assert resp.expires_in is None
 
     def test_with_expiry(self):

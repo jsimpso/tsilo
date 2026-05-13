@@ -1,7 +1,7 @@
 """Unit tests for SQLAlchemy model validation, constraints, and relationships."""
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -243,7 +243,7 @@ class TestNamespacePermissionValidation:
 
 class TestAPITokenValidation:
     def _make_token(self, expires_at=None, revoked_at=None):
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         return APIToken(
             token_hash="a" * 64,
             user_id=uuid.uuid4(),
@@ -259,13 +259,13 @@ class TestAPITokenValidation:
 
     def test_is_valid_expired_token(self):
         token = self._make_token(
-            expires_at=datetime.now(tz=timezone.utc) - timedelta(days=1),
+            expires_at=datetime.now(tz=UTC) - timedelta(days=1),
         )
         assert token.is_valid is False
 
     def test_is_valid_revoked_token(self):
         token = self._make_token(
-            revoked_at=datetime.now(tz=timezone.utc),
+            revoked_at=datetime.now(tz=UTC),
         )
         assert token.is_valid is False
 
@@ -279,7 +279,7 @@ class TestAPITokenValidation:
 
 class TestOAuthCodeValidation:
     def _make_code(self, expires_at=None, used_at=None):
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         return OAuthAuthorizationCode(
             code="test-code-abc123",
             user_id=uuid.uuid4(),
@@ -298,13 +298,13 @@ class TestOAuthCodeValidation:
 
     def test_is_valid_expired_code(self):
         code = self._make_code(
-            expires_at=datetime.now(tz=timezone.utc) - timedelta(minutes=1),
+            expires_at=datetime.now(tz=UTC) - timedelta(minutes=1),
         )
         assert code.is_valid is False
 
     def test_is_valid_used_code(self):
         code = self._make_code(
-            used_at=datetime.now(tz=timezone.utc),
+            used_at=datetime.now(tz=UTC),
         )
         assert code.is_valid is False
 

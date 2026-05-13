@@ -3,7 +3,7 @@
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import structlog
 from sqlalchemy import select
@@ -13,7 +13,7 @@ from tsilo.models.api_token import APIToken
 
 logger = structlog.get_logger(__name__)
 
-TOKEN_PREFIX = "tsilo_"
+TOKEN_PREFIX = "tsilo_"  # noqa: S105
 
 
 def generate_token() -> str:
@@ -53,10 +53,10 @@ class TokenService:
         token_hash_value = hash_token(plaintext)
 
         if expires_in_days is not None:
-            expires_at = datetime.now(tz=timezone.utc) + timedelta(days=expires_in_days)
+            expires_at = datetime.now(tz=UTC) + timedelta(days=expires_in_days)
         else:
             # Far-future expiry for tokens without explicit expiration
-            expires_at = datetime.now(tz=timezone.utc) + timedelta(days=36500)
+            expires_at = datetime.now(tz=UTC) + timedelta(days=36500)
 
         token = APIToken(
             token_hash=token_hash_value,
@@ -111,7 +111,7 @@ class TokenService:
         if token.revoked_at is not None:
             return token  # Already revoked
 
-        token.revoked_at = datetime.now(tz=timezone.utc)
+        token.revoked_at = datetime.now(tz=UTC)
         await self._db.flush()
 
         logger.info(

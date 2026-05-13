@@ -1,18 +1,12 @@
 """Contract test for OAuth token exchange - verify code verifier validation,
 token issuance, and error cases."""
 
-import hashlib
-import base64
-import uuid
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from tsilo.main import app
-from tsilo.middleware.auth import CurrentUser
-from tsilo.models.user import User
 
 
 @pytest.fixture

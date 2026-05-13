@@ -1,7 +1,7 @@
 """Module service - listing, searching, and retrieving modules with permissions."""
 
 import math
-import uuid
+from datetime import UTC
 from functools import cmp_to_key
 
 import structlog
@@ -183,9 +183,9 @@ class ModuleService:
             deprecated = False
             deprecation_reason = None
             if last_dl:
-                from datetime import datetime, timezone
+                from datetime import datetime
 
-                days_since = (datetime.now(tz=timezone.utc) - last_dl).days
+                days_since = (datetime.now(tz=UTC) - last_dl).days
                 if days_since > 90:
                     deprecated = True
                     deprecation_reason = "No downloads in 90+ days"

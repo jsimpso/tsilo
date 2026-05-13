@@ -4,7 +4,7 @@ then download via Terraform registry protocol."""
 import io
 import tarfile
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -23,7 +23,7 @@ def _make_user(groups: list[str] | None = None) -> CurrentUser:
         email="author@example.com",
         name="Module Author",
         groups=groups or ["platform-team-developers"],
-        last_login_at=datetime.now(tz=timezone.utc),
+        last_login_at=datetime.now(tz=UTC),
     )
     return CurrentUser(user=user, auth_method="api_token")
 
@@ -32,8 +32,10 @@ def _make_tar_gz() -> bytes:
     """Create a valid module .tar.gz archive."""
     files = {
         "main.tf": 'resource "null_resource" "example" {}',
-        "variables.tf": 'variable "name" {\n  type = string\n  description = "The name"\n}',
-        "outputs.tf": 'output "id" {\n  value = null_resource.example.id\n  description = "The ID"\n}',
+        "variables.tf": ('variable "name" {\n  type = string' '\n  description = "The name"\n}'),
+        "outputs.tf": (
+            'output "id" {\n  value = null_resource.example.id' '\n  description = "The ID"\n}'
+        ),
         "README.md": "# Test Module\n\nA test module for integration testing.",
     }
     buf = io.BytesIO()
@@ -118,7 +120,7 @@ async def test_upload_then_download_cycle(client, mock_auth, mock_db):
                 "package_url": f"s3://tsilo-modules/{ns}/{name}/{provider}/{version}/module.tar.gz",
                 "package_size_bytes": 1024,
                 "checksum_sha256": "a" * 64,
-                "published_at": datetime.now(tz=timezone.utc).isoformat(),
+                "published_at": datetime.now(tz=UTC).isoformat(),
             }
             mock_ver_cls.return_value = mock_ver
 
@@ -219,7 +221,7 @@ async def test_upload_duplicate_then_upload_new_version(client, mock_auth, mock_
                 "package_url": f"s3://tsilo-modules/{ns}/{name}/{provider}/1.1.0/module.tar.gz",
                 "package_size_bytes": 1024,
                 "checksum_sha256": "b" * 64,
-                "published_at": datetime.now(tz=timezone.utc).isoformat(),
+                "published_at": datetime.now(tz=UTC).isoformat(),
             }
             mock_ver_cls.return_value = mock_ver
 
