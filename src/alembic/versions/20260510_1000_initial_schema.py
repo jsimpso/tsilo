@@ -92,7 +92,9 @@ def upgrade() -> None:
         ),
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["namespace_id"], ["namespaces.id"], ondelete="CASCADE"),
-        sa.UniqueConstraint("namespace_id", "name", "provider", name="uq_module_namespace_name_provider"),
+        sa.UniqueConstraint(
+            "namespace_id", "name", "provider", name="uq_module_namespace_name_provider"
+        ),
     )
     op.create_index("ix_modules_namespace_id", "modules", ["namespace_id"])
     op.create_index("ix_modules_name", "modules", ["name"])
@@ -158,7 +160,9 @@ def upgrade() -> None:
             name="uq_namespace_group_permission",
         ),
     )
-    op.create_index("ix_namespace_permissions_namespace_id", "namespace_permissions", ["namespace_id"])
+    op.create_index(
+        "ix_namespace_permissions_namespace_id", "namespace_permissions", ["namespace_id"]
+    )
     op.create_index("ix_namespace_permissions_group_name", "namespace_permissions", ["group_name"])
 
     # API tokens table
@@ -208,8 +212,12 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("code"),
     )
-    op.create_index("ix_oauth_authorization_codes_expires_at", "oauth_authorization_codes", ["expires_at"])
-    op.create_index("ix_oauth_authorization_codes_user_id", "oauth_authorization_codes", ["user_id"])
+    op.create_index(
+        "ix_oauth_authorization_codes_expires_at", "oauth_authorization_codes", ["expires_at"]
+    )
+    op.create_index(
+        "ix_oauth_authorization_codes_user_id", "oauth_authorization_codes", ["user_id"]
+    )
 
     # Download metrics table
     op.create_table(
@@ -234,7 +242,9 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["version_id"], ["module_versions.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("version_id"),
     )
-    op.create_index("ix_download_metrics_last_download_at", "download_metrics", ["last_download_at"])
+    op.create_index(
+        "ix_download_metrics_last_download_at", "download_metrics", ["last_download_at"]
+    )
 
 
 def downgrade() -> None:

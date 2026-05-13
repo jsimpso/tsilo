@@ -49,7 +49,9 @@ class TestServiceDiscoveryResponse:
 
 class TestVersionsResponse:
     def test_versions_list(self):
-        resp = VersionsResponse(modules=[{"versions": [{"version": "1.0.0"}, {"version": "2.0.0"}]}])
+        resp = VersionsResponse(
+            modules=[{"versions": [{"version": "1.0.0"}, {"version": "2.0.0"}]}]
+        )
         assert len(resp.modules) == 1
         assert resp.modules[0].versions[0].version == "1.0.0"
 

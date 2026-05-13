@@ -39,7 +39,9 @@ class PermissionService:
             .where(
                 NamespacePermission.namespace.has(name=namespace_name),
                 NamespacePermission.group_name.in_(user.groups),
-                NamespacePermission.permission_level.in_([PermissionLevel.READ, PermissionLevel.WRITE]),
+                NamespacePermission.permission_level.in_(
+                    [PermissionLevel.READ, PermissionLevel.WRITE]
+                ),
             )
         )
         result = await self._db.execute(stmt)
@@ -89,7 +91,9 @@ class PermissionService:
             .join(NamespacePermission, NamespacePermission.namespace_id == Namespace.id)
             .where(
                 NamespacePermission.group_name.in_(user.groups),
-                NamespacePermission.permission_level.in_([PermissionLevel.READ, PermissionLevel.WRITE]),
+                NamespacePermission.permission_level.in_(
+                    [PermissionLevel.READ, PermissionLevel.WRITE]
+                ),
             )
             .distinct()
         )

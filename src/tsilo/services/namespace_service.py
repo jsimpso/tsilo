@@ -30,7 +30,9 @@ class NamespaceService:
             .join(NamespacePermission, NamespacePermission.namespace_id == Namespace.id)
             .where(
                 NamespacePermission.group_name.in_(user.groups),
-                NamespacePermission.permission_level.in_([PermissionLevel.READ, PermissionLevel.WRITE]),
+                NamespacePermission.permission_level.in_(
+                    [PermissionLevel.READ, PermissionLevel.WRITE]
+                ),
             )
             .distinct()
             .options(joinedload(Namespace.permissions))
@@ -41,7 +43,9 @@ class NamespaceService:
         items = []
         for ns in namespaces:
             # Count modules in this namespace
-            count_stmt = select(func.count()).select_from(Module).where(Module.namespace_id == ns.id)
+            count_stmt = (
+                select(func.count()).select_from(Module).where(Module.namespace_id == ns.id)
+            )
             count_result = await self._db.execute(count_stmt)
             module_count = count_result.scalar() or 0
 

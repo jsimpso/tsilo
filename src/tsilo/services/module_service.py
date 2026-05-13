@@ -36,7 +36,9 @@ class ModuleService:
             .join(NamespacePermission, NamespacePermission.namespace_id == Namespace.id)
             .where(
                 NamespacePermission.group_name.in_(user.groups),
-                NamespacePermission.permission_level.in_([PermissionLevel.READ, PermissionLevel.WRITE]),
+                NamespacePermission.permission_level.in_(
+                    [PermissionLevel.READ, PermissionLevel.WRITE]
+                ),
             )
             .distinct()
             .scalar_subquery()
@@ -67,7 +69,9 @@ class ModuleService:
             base_query = base_query.where(Namespace.name == namespace)
         if search:
             search_term = f"%{search}%"
-            base_query = base_query.where(Module.name.ilike(search_term) | Module.description.ilike(search_term))
+            base_query = base_query.where(
+                Module.name.ilike(search_term) | Module.description.ilike(search_term)
+            )
 
         # Count total
         count_query = select(func.count()).select_from(base_query.subquery())
@@ -139,7 +143,9 @@ class ModuleService:
             },
         }
 
-    async def get_module_with_versions(self, namespace: str, name: str, provider: str) -> dict | None:
+    async def get_module_with_versions(
+        self, namespace: str, name: str, provider: str
+    ) -> dict | None:
         """Get detailed module info with all versions.
 
         Returns None if module not found.
@@ -216,7 +222,9 @@ class ModuleService:
             "total_downloads": total_downloads,
         }
 
-    async def get_version_detail(self, namespace: str, name: str, provider: str, version: str) -> dict | None:
+    async def get_version_detail(
+        self, namespace: str, name: str, provider: str, version: str
+    ) -> dict | None:
         """Get detailed version info including inputs, outputs, and README.
 
         Returns None if not found.

@@ -55,7 +55,9 @@ def _make_tar_gz(files: dict[str, str] | None = None) -> bytes:
 @pytest.fixture
 async def client():
     """Create an async test client."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False) as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False
+    ) as ac:
         yield ac
 
 
@@ -199,7 +201,9 @@ async def test_upload_success_returns_201(client, mock_auth, mock_db):
                 "name": "vpc",
                 "provider": "aws",
                 "version": "1.0.0",
-                "inputs": [{"name": "name", "type": "string", "description": "The name", "required": True}],
+                "inputs": [
+                    {"name": "name", "type": "string", "description": "The name", "required": True}
+                ],
                 "outputs": [{"name": "id", "description": "The ID"}],
                 "package_url": "s3://tsilo-modules/platform-team/vpc/aws/1.0.0/module.tar.gz",
                 "package_size_bytes": 1024,
@@ -274,7 +278,10 @@ async def test_upload_rejects_tar_without_tf_files(client, mock_auth, mock_db):
             )
             assert response.status_code == 400
             data = response.json()
-            assert ".tf" in data["errors"][0]["detail"].lower() or "terraform" in data["errors"][0]["detail"].lower()
+            assert (
+                ".tf" in data["errors"][0]["detail"].lower()
+                or "terraform" in data["errors"][0]["detail"].lower()
+            )
 
 
 # --- Size limit tests ---

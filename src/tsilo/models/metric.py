@@ -19,7 +19,9 @@ class DownloadMetric(Base, TimestampMixin):
         ForeignKey("module_versions.id", ondelete="CASCADE"), unique=True, nullable=False
     )
     download_count: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
-    last_download_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    last_download_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, index=True
+    )
 
     # Relationships
     version: Mapped["ModuleVersion"] = relationship(back_populates="download_metric")  # noqa: F821

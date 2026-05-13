@@ -139,7 +139,9 @@ async def prometheus_metrics(
         lines.append("# HELP tsilo_module_downloads_total Total downloads per module.")
         lines.append("# TYPE tsilo_module_downloads_total gauge")
         for row in mod_rows:
-            labels = f'namespace="{row.namespace}",name="{row.module_name}",provider="{row.provider}"'
+            labels = (
+                f'namespace="{row.namespace}",name="{row.module_name}",provider="{row.provider}"'
+            )
             lines.append(f"tsilo_module_downloads_total{{{labels}}} {row.downloads}")
         lines.append("")
 
@@ -159,28 +161,38 @@ async def prometheus_metrics(
         )
         ver_result = await db.execute(ver_count_stmt)
         for row in ver_result:
-            labels = f'namespace="{row.namespace}",name="{row.module_name}",provider="{row.provider}"'
+            labels = (
+                f'namespace="{row.namespace}",name="{row.module_name}",provider="{row.provider}"'
+            )
             lines.append(f"tsilo_module_versions_total{{{labels}}} {row.version_count}")
         lines.append("")
 
         # Deprecated versions count
         metrics_service = MetricsService(db)
         deprecated_versions = await metrics_service.flag_deprecated_versions()
-        lines.append("# HELP tsilo_deprecated_versions_total Number of deprecated module versions.")
+        lines.append(
+            "# HELP tsilo_deprecated_versions_total Number of deprecated module versions."
+        )
         lines.append("# TYPE tsilo_deprecated_versions_total gauge")
         lines.append(f"tsilo_deprecated_versions_total {len(deprecated_versions)}")
         lines.append("")
 
         # Total counts
         total_modules = (await db.execute(select(func.count()).select_from(Module))).scalar() or 0
-        total_versions = (await db.execute(select(func.count()).select_from(ModuleVersion))).scalar() or 0
-        total_namespaces = (await db.execute(select(func.count()).select_from(Namespace))).scalar() or 0
+        total_versions = (
+            await db.execute(select(func.count()).select_from(ModuleVersion))
+        ).scalar() or 0
+        total_namespaces = (
+            await db.execute(select(func.count()).select_from(Namespace))
+        ).scalar() or 0
 
         lines.append("# HELP tsilo_modules_total Total number of modules in the registry.")
         lines.append("# TYPE tsilo_modules_total gauge")
         lines.append(f"tsilo_modules_total {total_modules}")
         lines.append("")
-        lines.append("# HELP tsilo_versions_total Total number of module versions in the registry.")
+        lines.append(
+            "# HELP tsilo_versions_total Total number of module versions in the registry."
+        )
         lines.append("# TYPE tsilo_versions_total gauge")
         lines.append(f"tsilo_versions_total {total_versions}")
         lines.append("")

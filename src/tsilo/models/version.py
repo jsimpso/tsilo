@@ -34,9 +34,15 @@ class ModuleVersion(Base):
     package_url: Mapped[str] = mapped_column(String(1000), nullable=False)
     package_size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
     checksum_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
-    published_by: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default="now()")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default="now()")
+    published_by: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    published_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default="now()"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default="now()"
+    )
 
     # Relationships
     module: Mapped["Module"] = relationship(back_populates="versions")  # noqa: F821

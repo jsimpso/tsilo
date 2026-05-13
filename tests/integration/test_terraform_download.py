@@ -28,7 +28,9 @@ def _make_user(groups: list[str] | None = None) -> CurrentUser:
 @pytest.fixture
 async def client():
     """Create an async test client."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False) as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False
+    ) as ac:
         yield ac
 
 
@@ -105,7 +107,9 @@ async def test_full_terraform_download_flow(client, mock_auth, mock_db):
 
             with patch("tsilo.api.registry.StorageService") as mock_storage_cls:
                 mock_storage = mock_storage_cls.return_value
-                download_url = "https://s3.example.com/platform-team/vpc/aws/1.2.3/module.tar.gz?signed=1"
+                download_url = (
+                    "https://s3.example.com/platform-team/vpc/aws/1.2.3/module.tar.gz?signed=1"
+                )
                 mock_storage.generate_download_url.return_value = download_url
 
                 with patch("tsilo.api.registry.MetricsService") as mock_metrics_cls:
