@@ -153,6 +153,32 @@
         }
 
         html += '</select></div>';
+
+        // Version list with download metrics
+        html += '<div class="version-metrics-list">' +
+            '<h3>All Versions</h3>' +
+            '<table class="data-table">' +
+            '<thead><tr><th>Version</th><th>Published</th><th>Downloads</th><th>Last Download</th><th>Status</th></tr></thead>' +
+            '<tbody>';
+
+        for (var j = 0; j < versions.length; j++) {
+            var ver = versions[j];
+            var href = '/modules/' +
+                encodeURIComponent(segments.namespace) + '/' +
+                encodeURIComponent(segments.name) + '/' +
+                encodeURIComponent(segments.provider) + '/' +
+                encodeURIComponent(ver.version);
+            var rowClass = ver.version === currentVersion ? ' class="active-row"' : '';
+            html += '<tr' + rowClass + '>' +
+                '<td><a href="' + href + '">' + escapeHtml(ver.version) + '</a></td>' +
+                '<td>' + formatDate(ver.published_at) + '</td>' +
+                '<td>' + formatNumber(ver.download_count || 0) + '</td>' +
+                '<td>' + (ver.last_download_at ? formatDate(ver.last_download_at) : '—') + '</td>' +
+                '<td>' + (ver.deprecated ? '<span class="badge-deprecated">Deprecated</span>' : '<span class="badge badge-active">Active</span>') + '</td>' +
+                '</tr>';
+        }
+
+        html += '</tbody></table></div>';
         return html;
     }
 
@@ -261,7 +287,8 @@
                     '  <h4>Version ' + escapeHtml(targetVersion) + '</h4>' +
                     '  <dl class="info-list">' +
                     '    <dt>Published</dt><dd>' + formatDate(versionDetail.published_at) + '</dd>' +
-                    '    <dt>Downloads</dt><dd>' + formatNumber(versionDetail.download_count) + '</dd>';
+                    '    <dt>Downloads</dt><dd class="download-stat">' + formatNumber(versionDetail.download_count) + '</dd>' +
+                    '    <dt>Last Download</dt><dd>' + (versionDetail.last_download_at ? formatDate(versionDetail.last_download_at) : 'Never') + '</dd>';
 
                 if (versionDetail.published_by) {
                     html += '    <dt>Author</dt><dd>' +
