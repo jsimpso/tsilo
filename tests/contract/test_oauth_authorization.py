@@ -37,6 +37,17 @@ async def client():
         yield ac
 
 
+@pytest.fixture(autouse=True)
+def mock_db():
+    """Mock database session dependency for all OAuth authorization tests."""
+    from tsilo.models import get_db
+
+    mock_session = AsyncMock()
+    app.dependency_overrides[get_db] = lambda: mock_session
+    yield mock_session
+    app.dependency_overrides.pop(get_db, None)
+
+
 @pytest.mark.asyncio
 async def test_authorization_endpoint_exists(client):
     """GET /oauth/authorization should exist and respond (redirect or error, not 404)."""

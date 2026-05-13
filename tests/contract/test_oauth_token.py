@@ -26,6 +26,24 @@ async def client():
         yield ac
 
 
+@pytest.fixture(autouse=True)
+def mock_db():
+    """Mock database session dependency for all OAuth token tests."""
+    from unittest.mock import MagicMock
+
+    from tsilo.models import get_db
+
+    mock_session = AsyncMock()
+    # Ensure execute().scalar_one_or_none() returns None (code not found)
+    mock_result = MagicMock()
+    mock_result.scalar_one_or_none.return_value = None
+    mock_session.execute.return_value = mock_result
+
+    app.dependency_overrides[get_db] = lambda: mock_session
+    yield mock_session
+    app.dependency_overrides.pop(get_db, None)
+
+
 @pytest.mark.asyncio
 async def test_token_endpoint_exists(client):
     """POST /oauth/token should exist (not 404 or 405)."""

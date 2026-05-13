@@ -90,22 +90,52 @@ MODULES = [
             {
                 "version": "1.0.0",
                 "inputs": [
-                    {"name": "vpc_cidr", "type": "string", "description": "CIDR block for the VPC", "default": "10.0.0.0/16", "required": False},
-                    {"name": "name", "type": "string", "description": "Name tag for the VPC", "default": None, "required": True},
+                    {
+                        "name": "vpc_cidr",
+                        "type": "string",
+                        "description": "CIDR block for the VPC",
+                        "default": "10.0.0.0/16",
+                        "required": False,
+                    },
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "description": "Name tag for the VPC",
+                        "default": None,
+                        "required": True,
+                    },
                 ],
                 "outputs": [
                     {"name": "vpc_id", "description": "The ID of the VPC"},
                     {"name": "public_subnet_ids", "description": "List of public subnet IDs"},
                 ],
-                "readme": "# VPC Module\n\nCreates an AWS VPC with public and private subnets.\n\n## Usage\n\n```hcl\nmodule \"vpc\" {\n  source  = \"tsilo.example.com/platform-team/vpc/aws\"\n  version = \"~> 1.0\"\n  name    = \"production\"\n}\n```",
+                "readme": '# VPC Module\n\nCreates an AWS VPC with public and private subnets.\n\n## Usage\n\n```hcl\nmodule "vpc" {\n  source  = "tsilo.example.com/platform-team/vpc/aws"\n  version = "~> 1.0"\n  name    = "production"\n}\n```',
                 "downloads": 150,
             },
             {
                 "version": "2.0.0",
                 "inputs": [
-                    {"name": "vpc_cidr", "type": "string", "description": "CIDR block for the VPC", "default": "10.0.0.0/16", "required": False},
-                    {"name": "name", "type": "string", "description": "Name tag for the VPC", "default": None, "required": True},
-                    {"name": "enable_nat", "type": "bool", "description": "Enable NAT gateway", "default": "true", "required": False},
+                    {
+                        "name": "vpc_cidr",
+                        "type": "string",
+                        "description": "CIDR block for the VPC",
+                        "default": "10.0.0.0/16",
+                        "required": False,
+                    },
+                    {
+                        "name": "name",
+                        "type": "string",
+                        "description": "Name tag for the VPC",
+                        "default": None,
+                        "required": True,
+                    },
+                    {
+                        "name": "enable_nat",
+                        "type": "bool",
+                        "description": "Enable NAT gateway",
+                        "default": "true",
+                        "required": False,
+                    },
                 ],
                 "outputs": [
                     {"name": "vpc_id", "description": "The ID of the VPC"},
@@ -126,8 +156,20 @@ MODULES = [
             {
                 "version": "1.0.0",
                 "inputs": [
-                    {"name": "cluster_name", "type": "string", "description": "Name of the EKS cluster", "default": None, "required": True},
-                    {"name": "kubernetes_version", "type": "string", "description": "Kubernetes version", "default": "1.28", "required": False},
+                    {
+                        "name": "cluster_name",
+                        "type": "string",
+                        "description": "Name of the EKS cluster",
+                        "default": None,
+                        "required": True,
+                    },
+                    {
+                        "name": "kubernetes_version",
+                        "type": "string",
+                        "description": "Kubernetes version",
+                        "default": "1.28",
+                        "required": False,
+                    },
                 ],
                 "outputs": [
                     {"name": "cluster_endpoint", "description": "EKS cluster API endpoint"},
@@ -147,8 +189,20 @@ MODULES = [
             {
                 "version": "1.0.0",
                 "inputs": [
-                    {"name": "domain_name", "type": "string", "description": "Domain for the CDN", "default": None, "required": True},
-                    {"name": "origin_bucket", "type": "string", "description": "S3 bucket name for origin", "default": None, "required": True},
+                    {
+                        "name": "domain_name",
+                        "type": "string",
+                        "description": "Domain for the CDN",
+                        "default": None,
+                        "required": True,
+                    },
+                    {
+                        "name": "origin_bucket",
+                        "type": "string",
+                        "description": "S3 bucket name for origin",
+                        "default": None,
+                        "required": True,
+                    },
                 ],
                 "outputs": [
                     {"name": "distribution_id", "description": "CloudFront distribution ID"},
@@ -168,8 +222,20 @@ MODULES = [
             {
                 "version": "1.0.0",
                 "inputs": [
-                    {"name": "role_name", "type": "string", "description": "Name of the IAM role", "default": None, "required": True},
-                    {"name": "trusted_services", "type": "list(string)", "description": "AWS services allowed to assume the role", "default": None, "required": True},
+                    {
+                        "name": "role_name",
+                        "type": "string",
+                        "description": "Name of the IAM role",
+                        "default": None,
+                        "required": True,
+                    },
+                    {
+                        "name": "trusted_services",
+                        "type": "list(string)",
+                        "description": "AWS services allowed to assume the role",
+                        "default": None,
+                        "required": True,
+                    },
                 ],
                 "outputs": [
                     {"name": "role_arn", "description": "ARN of the IAM role"},
