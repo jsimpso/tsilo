@@ -42,13 +42,13 @@ test-coverage:
 lint:
     uv run ruff check src/ tests/
 
-# Format with black
+# Format with ruff
 fmt:
-    uv run black src/ tests/
+    uv run ruff format src/ tests/
 
 # Check formatting without modifying
 fmt-check:
-    uv run black --check src/ tests/
+    uv run ruff format --check src/ tests/
 
 # Type check with mypy
 typecheck:
@@ -68,3 +68,36 @@ db-revision MESSAGE:
 # Seed development database
 db-seed:
     uv run python -m scripts.seed_data
+
+# Start development services (Postgres, MinIO, Keycloak)
+dev-up:
+    podman compose up -d
+    @echo "Waiting for services to be healthy..."
+    @sleep 2
+    @podman compose ps --format 'table {{`{{.Name}}`}}\t{{`{{.Status}}`}}'
+    @echo ""
+    @echo "Services:"
+    @echo "  Postgres:         localhost:5432  (tsilo/tsilo)"
+    @echo "  MinIO Console:    http://localhost:9001  (minioadmin/minioadmin)"
+    @echo "  Keycloak Admin:   http://localhost:8080/admin  (admin/admin)"
+    @echo "  Keycloak Realm:   http://localhost:8080/realms/tsilo"
+    @echo ""
+    @echo "Test users (password = username):"
+    @echo "  admin@tsilo.local  (groups: tsilo-admins, tsilo-users)"
+    @echo "  dev@tsilo.local    (groups: tsilo-users)"
+
+# Stop development services
+dev-down:
+    podman compose down
+
+# Stop development services and remove volumes
+dev-reset:
+    podman compose down -v
+
+# Show development service logs
+dev-logs *ARGS:
+    podman compose logs {{ ARGS }}
+
+# Show development service status
+dev-ps:
+    podman compose ps

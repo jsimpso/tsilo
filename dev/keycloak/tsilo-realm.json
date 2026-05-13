@@ -1,0 +1,122 @@
+{
+    "realm": "tsilo",
+    "enabled": true,
+    "sslRequired": "none",
+    "registrationAllowed": false,
+    "loginWithEmailAllowed": true,
+    "duplicateEmailsAllowed": false,
+    "resetPasswordAllowed": false,
+    "editUsernameAllowed": false,
+    "bruteForceProtected": false,
+    "accessTokenLifespan": 3600,
+    "ssoSessionIdleTimeout": 86400,
+    "ssoSessionMaxLifespan": 86400,
+    "clients": [
+        {
+            "clientId": "tsilo-dev",
+            "name": "Tsilo Dev",
+            "enabled": true,
+            "publicClient": false,
+            "secret": "tsilo-dev-secret",
+            "redirectUris": [
+                "http://localhost:8000/*"
+            ],
+            "webOrigins": [
+                "http://localhost:8000"
+            ],
+            "protocol": "openid-connect",
+            "standardFlowEnabled": true,
+            "directAccessGrantsEnabled": true,
+            "serviceAccountsEnabled": false,
+            "fullScopeAllowed": true,
+            "protocolMappers": [
+                {
+                    "name": "groups",
+                    "protocol": "openid-connect",
+                    "protocolMapper": "oidc-group-membership-mapper",
+                    "config": {
+                        "full.path": "false",
+                        "id.token.claim": "true",
+                        "access.token.claim": "true",
+                        "claim.name": "groups",
+                        "userinfo.token.claim": "true"
+                    }
+                }
+            ]
+        }
+    ],
+    "clientScopes": [
+        {
+            "name": "groups",
+            "protocol": "openid-connect",
+            "attributes": {
+                "include.in.token.scope": "true",
+                "display.on.consent.screen": "false"
+            },
+            "protocolMappers": [
+                {
+                    "name": "groups",
+                    "protocol": "openid-connect",
+                    "protocolMapper": "oidc-group-membership-mapper",
+                    "config": {
+                        "full.path": "false",
+                        "id.token.claim": "true",
+                        "access.token.claim": "true",
+                        "claim.name": "groups",
+                        "userinfo.token.claim": "true"
+                    }
+                }
+            ]
+        }
+    ],
+    "defaultDefaultClientScopes": [
+        "groups"
+    ],
+    "groups": [
+        {
+            "name": "tsilo-admins"
+        },
+        {
+            "name": "tsilo-users"
+        }
+    ],
+    "users": [
+        {
+            "username": "admin",
+            "email": "admin@tsilo.local",
+            "firstName": "Admin",
+            "lastName": "User",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "admin",
+                    "temporary": false
+                }
+            ],
+            "groups": [
+                "tsilo-admins",
+                "tsilo-users"
+            ]
+        },
+        {
+            "username": "dev",
+            "email": "dev@tsilo.local",
+            "firstName": "Dev",
+            "lastName": "User",
+            "enabled": true,
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "dev",
+                    "temporary": false
+                }
+            ],
+            "groups": [
+                "tsilo-users"
+            ]
+        }
+    ]
+}
