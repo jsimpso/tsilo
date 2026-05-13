@@ -53,11 +53,22 @@
         try {
             const res = await fetch('/auth/me', { credentials: 'same-origin' });
             if (res.ok) {
+                const csrfToken = res.headers.get('X-CSRF-Token') || '';
                 const data = await res.json();
                 if (navAuth && data.user) {
                     navAuth.innerHTML =
                         '<span class="nav-user">' + escapeHtml(data.user.name || data.user.email) + '</span>' +
-                        ' <button class="btn btn-sm" onclick="fetch(\'/auth/logout\',{method:\'POST\',credentials:\'same-origin\'}).then(()=>location.reload())">Sign Out</button>';
+                        ' <button class="btn btn-sm" id="logout-btn">Sign Out</button>';
+                    var logoutBtn = document.getElementById('logout-btn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', function () {
+                            fetch('/auth/logout', {
+                                method: 'POST',
+                                credentials: 'same-origin',
+                                headers: { 'X-CSRF-Token': csrfToken }
+                            }).then(function () { location.reload(); });
+                        });
+                    }
                 }
                 return data;
             }

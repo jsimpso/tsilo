@@ -38,7 +38,7 @@ class NamespacePermission(Base, TimestampMixin):
         ForeignKey("namespaces.id", ondelete="CASCADE"), nullable=False, index=True
     )
     group_name: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
-    permission_level: Mapped[PermissionLevel] = mapped_column(nullable=False)
+    permission_level: Mapped[PermissionLevel] = mapped_column(String(10), nullable=False)
 
     # Relationships
     namespace: Mapped[Namespace] = relationship(back_populates="permissions")

@@ -361,24 +361,25 @@
                 if (authDiv && data.user) {
                     authDiv.innerHTML =
                         '<span class="nav-user">' + escapeHtml(data.user.name || data.user.email) + '</span>' +
-                        '<button class="btn btn-sm btn-outline" onclick="handleLogout()">Sign Out</button>';
+                        '<button class="btn btn-sm btn-outline" id="logout-btn">Sign Out</button>';
+                    var logoutBtn = document.getElementById('logout-btn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', function () {
+                            fetch('/auth/logout', {
+                                method: 'POST',
+                                headers: { 'X-CSRF-Token': csrfToken },
+                            }).then(function () {
+                                window.location.href = '/';
+                            }).catch(function () {
+                                window.location.href = '/';
+                            });
+                        });
+                    }
                 }
             }
         } catch (e) {
             // Not authenticated
         }
-    }
-
-    window.handleLogout = async function () {
-        try {
-            await fetch('/auth/logout', {
-                method: 'POST',
-                headers: { 'X-CSRF-Token': csrfToken },
-            });
-        } catch (e) {
-            // ignore
-        }
-        window.location.href = '/';
     };
 
     // Initialize

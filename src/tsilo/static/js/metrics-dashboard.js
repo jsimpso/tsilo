@@ -130,14 +130,30 @@
 
     // Check auth state and update nav
     fetch('/auth/me', { credentials: 'same-origin' })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (data) {
+        .then(function (r) {
+            var csrfToken = r.headers.get('X-CSRF-Token') || '';
+            return r.ok ? r.json().then(function (data) { return { data: data, csrf: csrfToken }; }) : null;
+        })
+        .then(function (result) {
             var nav = document.getElementById('nav-auth');
-            if (data && data.user) {
+            if (result && result.data && result.data.user) {
+                var data = result.data;
                 nav.innerHTML =
                     '<span class="nav-user">' + escapeHtml(data.user.name || data.user.email) + '</span>' +
                     ' <a href="/tokens" class="nav-link">Tokens</a>' +
-                    ' <button class="btn btn-sm" onclick="fetch(\'/auth/logout\',{method:\'POST\',credentials:\'same-origin\'}).then(function(){location.reload()})">Sign Out</button>';
+                    ' <button class="btn btn-sm" id="logout-btn">Sign Out</button>';
+                var logoutBtn = document.getElementById('logout-btn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', function () {
+                        fetch('/auth/logout', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'X-CSRF-Token': result.csrf }
+                        })
+                            .then(function () { location.reload(); })
+                            .catch(function () { location.reload(); });
+                    });
+                }
             }
         })
         .catch(function () { });

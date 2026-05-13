@@ -45,8 +45,7 @@ app = FastAPI(
         {
             "name": "registry",
             "description": (
-                "Terraform Registry Protocol v1 endpoints"
-                " (service discovery, versions, download, upload)."
+                "Terraform Registry Protocol v1 endpoints" " (service discovery, versions, download, upload)."
             ),
         },
         {"name": "modules", "description": "Web UI module browsing API."},
@@ -140,21 +139,15 @@ async def terraform_compatible_error_handler(request: Request, exc: HTTPExceptio
 
 
 # Middleware (applied in reverse order - last added is outermost)
+# NOTE: SessionMiddleware is registered after @app.middleware("http") decorators
+# below so it becomes outermost and loads session data before CSRF middleware
+# tries to access request.session on POST/PUT/DELETE requests.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[settings.app_base_url],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
-)
-
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=settings.secret_key,
-    session_cookie="tsilo_session",
-    max_age=86400,  # 24 hours
-    same_site="lax",
-    https_only=not settings.is_development,
 )
 
 app.add_middleware(LoggingMiddleware)
@@ -219,9 +212,7 @@ _CSRF_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 
 
 @app.middleware("http")
-async def csrf_protection(
-    request: Request, call_next: RequestResponseEndpoint
-) -> Response | JSONResponse:
+async def csrf_protection(request: Request, call_next: RequestResponseEndpoint) -> Response | JSONResponse:
     """Validate X-CSRF-Token header for state-changing requests from web UI sessions.
 
     Bearer token authenticated requests are exempt (API/CI usage).
@@ -256,6 +247,18 @@ async def csrf_protection(
     return response
 
 
+# SessionMiddleware must be outermost so request.session is available
+# to the CSRF middleware above during request processing.
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.secret_key,
+    session_cookie="tsilo_session",
+    max_age=86400,  # 24 hours
+    same_site="lax",
+    https_only=not settings.is_development,
+)
+
+
 # Import and include routers
 from tsilo.api.auth import oauth_router  # noqa: E402
 from tsilo.api.auth import router as auth_router  # noqa: E402
@@ -284,9 +287,7 @@ async def homepage() -> FileResponse:
 
 @app.get("/modules/{namespace}/{name}/{provider}", include_in_schema=False)
 @app.get("/modules/{namespace}/{name}/{provider}/{version}", include_in_schema=False)
-async def module_detail_page(
-    namespace: str, name: str, provider: str, version: str | None = None
-) -> FileResponse:
+async def module_detail_page(namespace: str, name: str, provider: str, version: str | None = None) -> FileResponse:
     """Serve the module detail SPA page (client-side routing)."""
     return FileResponse(STATIC_DIR / "module-detail.html", media_type="text/html")
 
