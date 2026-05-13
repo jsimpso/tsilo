@@ -131,6 +131,29 @@ async def cleanup_oauth_codes(
     return {"deleted_count": deleted}
 
 
+@router.post("/admin/calculate-metrics")
+async def calculate_metrics(
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Aggregate download counts and identify deprecated versions.
+
+    Intended to be called hourly by a cron job or scheduler.
+    Returns summary of deprecated versions found.
+    """
+    metrics_service = MetricsService(db)
+    deprecated = await metrics_service.flag_deprecated_versions()
+
+    logger.info(
+        "metrics_calculation_completed",
+        deprecated_count=len(deprecated),
+    )
+
+    return {
+        "deprecated_versions": len(deprecated),
+        "details": deprecated,
+    }
+
+
 def _is_admin(user: CurrentUser) -> bool:
     """Check if the current user is an admin."""
     settings = get_settings()
