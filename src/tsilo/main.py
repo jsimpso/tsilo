@@ -231,3 +231,9 @@ async def namespaces_page():
 async def tokens_page():
     """Serve the API token management page."""
     return FileResponse(STATIC_DIR / "tokens.html", media_type="text/html")
+
+
+@app.get("/metrics-dashboard", include_in_schema=False)
+async def metrics_dashboard_page():
+    """Serve the metrics dashboard page (admin only)."""
+    return FileResponse(STATIC_DIR / "metrics-dashboard.html", media_type="text/html")

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <title>Metrics Dashboard - Tsilo</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav-container">
+            <a href="/" class="nav-logo">Tsilo</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Modules</a>
+                <a href="/metrics-dashboard" class="nav-link nav-link-active">Metrics</a>
+            </div>
+            <div class="nav-auth" id="nav-auth">
+                <a href="/auth/login" class="btn btn-primary btn-sm">Sign In</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="hero">
+            <h1>Metrics Dashboard</h1>
+            <p class="hero-subtitle">System-wide module usage overview and analytics.</p>
+        </section>
+
+        <div id="metrics-loading" class="loading-indicator">
+            <div class="spinner" role="status">
+                <span class="sr-only">Loading metrics...</span>
+            </div>
+        </div>
+
+        <div id="metrics-error" class="error-container" hidden>
+            <h2>Access Denied</h2>
+            <p id="error-message">You need admin access to view system metrics.</p>
+            <a href="/" class="btn btn-primary">Back to Modules</a>
+        </div>
+
+        <div id="metrics-content" hidden>
+            <section class="metrics-overview">
+                <h2>System Overview</h2>
+                <div class="metrics-cards">
+                    <div class="metric-card">
+                        <span class="metric-value" id="total-modules">0</span>
+                        <span class="metric-label">Total Modules</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="total-versions">0</span>
+                        <span class="metric-label">Total Versions</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="total-namespaces">0</span>
+                        <span class="metric-label">Namespaces</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="total-downloads">0</span>
+                        <span class="metric-label">Total Downloads</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="downloads-30d">0</span>
+                        <span class="metric-label">Downloads (30d)</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="active-users">0</span>
+                        <span class="metric-label">Active Users (30d)</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="metrics-tables">
+                <div class="metrics-table-container">
+                    <h2>Top Modules</h2>
+                    <table class="data-table" id="top-modules-table">
+                        <thead>
+                            <tr>
+                                <th>Module</th>
+                                <th>Provider</th>
+                                <th>Downloads</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-modules-body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="metrics-table-container">
+                    <h2>Namespace Usage</h2>
+                    <table class="data-table" id="namespace-usage-table">
+                        <thead>
+                            <tr>
+                                <th>Namespace</th>
+                                <th>Modules</th>
+                                <th>Versions</th>
+                                <th>Downloads</th>
+                            </tr>
+                        </thead>
+                        <tbody id="namespace-usage-body">
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 Tsilo &mdash; Private Terraform Module Registry</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/metrics-dashboard.js"></script>
+</body>
+</html>
