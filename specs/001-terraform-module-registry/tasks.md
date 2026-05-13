@@ -98,17 +98,17 @@
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T042 [P] [US2] Integration test for web UI auth flow in tests/integration/test_web_auth.py: OIDC login, callback, session cookie, logout
-- [ ] T043 [P] [US2] Integration test for module browsing in tests/integration/test_module_browsing.py: list modules, search, filter by namespace, pagination
-- [ ] T044 [P] [US2] Integration test for module detail page in tests/integration/test_module_detail.py: README rendering, inputs/outputs display, version switching
+- [x] T042 [P] [US2] Integration test for web UI auth flow in tests/integration/test_web_auth.py: OIDC login, callback, session cookie, logout
+- [x] T043 [P] [US2] Integration test for module browsing in tests/integration/test_module_browsing.py: list modules, search, filter by namespace, pagination
+- [x] T044 [P] [US2] Integration test for module detail page in tests/integration/test_module_detail.py: README rendering, inputs/outputs display, version switching
 
 ### Implementation for User Story 2
 
-- [ ] T045 [P] [US2] Create Pydantic schemas for web UI API in src/tsilo/schemas/module.py: ModuleListResponse, ModuleDetailResponse, VersionDetailResponse with pagination
-- [ ] T046 [P] [US2] Create base HTML template in src/tsilo/templates/base.html: modern layout, navigation, responsive CSS, CSRF meta tag
-- [ ] T047 [US2] Implement OIDC login endpoints in src/tsilo/api/auth.py: GET /auth/login (redirect to OIDC), GET /auth/callback (handle code, create session), POST /auth/logout, GET /auth/me
+- [x] T045 [P] [US2] Create Pydantic schemas for web UI API in src/tsilo/schemas/module.py: ModuleListResponse, ModuleDetailResponse, VersionDetailResponse with pagination
+- [x] T046 [P] [US2] Create base HTML template in src/tsilo/templates/base.html: modern layout, navigation, responsive CSS, CSRF meta tag
+- [x] T047 [US2] Implement OIDC login endpoints in src/tsilo/api/auth.py: GET /auth/login (redirect to OIDC), GET /auth/callback (handle code, create session), POST /auth/logout, GET /auth/me
 - [ ] T048 [US2] Implement module listing endpoint in src/tsilo/api/modules.py: GET /api/modules with search, namespace filter, pagination (only authorized namespaces)
-- [ ] T049 [US2] Create module service in src/tsilo/services/module_service.py: list_modules, search_modules, get_module_with_versions, filter by user permissions
+- [x] T049 [US2] Create module service in src/tsilo/services/module_service.py: list_modules, search_modules, get_module_with_versions, filter by user permissions
 - [ ] T050 [US2] Implement module detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:provider with version list and metrics
 - [ ] T051 [US2] Implement version detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:provider/:version with inputs, outputs, README
 - [ ] T052 [P] [US2] Create static homepage in src/tsilo/static/index.html: module search, featured modules, recent activity
