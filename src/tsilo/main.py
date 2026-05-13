@@ -1,11 +1,12 @@
 """FastAPI application entry point - app initialization, middleware, CORS, security headers."""
 
 import json
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -123,3 +124,18 @@ app.include_router(auth_router)
 app.include_router(metrics_router)
 app.include_router(modules_router)
 app.include_router(registry_router)
+
+STATIC_DIR = Path("src/tsilo/static")
+
+
+@app.get("/", include_in_schema=False)
+async def homepage():
+    """Serve the static homepage."""
+    return FileResponse(STATIC_DIR / "index.html", media_type="text/html")
+
+
+@app.get("/modules/{namespace}/{name}/{provider}", include_in_schema=False)
+@app.get("/modules/{namespace}/{name}/{provider}/{version}", include_in_schema=False)
+async def module_detail_page(namespace: str, name: str, provider: str, version: str | None = None):
+    """Serve the module detail SPA page (client-side routing)."""
+    return FileResponse(STATIC_DIR / "module-detail.html", media_type="text/html")

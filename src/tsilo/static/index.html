@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <title>Tsilo - Terraform Module Registry</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav-container">
+            <a href="/" class="nav-logo">Tsilo</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link nav-link-active">Modules</a>
+            </div>
+            <div class="nav-auth" id="nav-auth">
+                <a href="/auth/login" class="btn btn-primary btn-sm">Sign In</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="hero">
+            <h1>Private Terraform Module Registry</h1>
+            <p class="hero-subtitle">Discover, share, and manage internal Terraform modules across your organization.</p>
+            <div class="search-container">
+                <input
+                    type="search"
+                    id="module-search"
+                    class="search-input"
+                    placeholder="Search modules..."
+                    aria-label="Search modules"
+                    autocomplete="off"
+                >
+            </div>
+        </section>
+
+        <section class="modules-section">
+            <div class="modules-toolbar">
+                <div class="modules-filter">
+                    <label for="namespace-filter" class="sr-only">Filter by namespace</label>
+                    <select id="namespace-filter" class="select-input">
+                        <option value="">All namespaces</option>
+                    </select>
+                </div>
+                <div class="modules-count" id="modules-count"></div>
+            </div>
+
+            <div id="modules-list" class="modules-grid">
+                <div class="loading-indicator" id="loading">
+                    <div class="spinner" role="status">
+                        <span class="sr-only">Loading modules...</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="pagination" id="pagination" aria-label="Module list pagination"></nav>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 Tsilo &mdash; Private Terraform Module Registry</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
