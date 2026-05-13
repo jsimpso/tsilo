@@ -189,6 +189,7 @@ from tsilo.api.metrics import router as metrics_router  # noqa: E402
 from tsilo.api.modules import router as modules_router  # noqa: E402
 from tsilo.api.namespaces import router as namespaces_router  # noqa: E402
 from tsilo.api.registry import router as registry_router  # noqa: E402
+from tsilo.api.tokens import router as tokens_router  # noqa: E402
 
 app.include_router(auth_router)
 app.include_router(oauth_router)
@@ -196,6 +197,7 @@ app.include_router(metrics_router)
 app.include_router(modules_router)
 app.include_router(namespaces_router)
 app.include_router(registry_router)
+app.include_router(tokens_router)
 
 STATIC_DIR = Path("src/tsilo/static")
 
