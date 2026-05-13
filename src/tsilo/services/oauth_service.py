@@ -190,7 +190,7 @@ class OAuthService:
         result = await self._db.execute(stmt)
         await self._db.flush()
 
-        count = result.rowcount
+        count: int = getattr(result, "rowcount", 0) or 0
         if count > 0:
             logger.info("oauth_codes_cleaned_up", deleted_count=count)
         return count

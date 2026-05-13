@@ -1,12 +1,18 @@
 """NamespacePermission model - maps groups to namespaces with permission levels."""
 
+from __future__ import annotations
+
 import uuid
 from enum import StrEnum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from tsilo.models import Base, TimestampMixin, generate_uuid
+
+if TYPE_CHECKING:
+    from tsilo.models.namespace import Namespace
 
 
 class PermissionLevel(StrEnum):
@@ -35,7 +41,7 @@ class NamespacePermission(Base, TimestampMixin):
     permission_level: Mapped[PermissionLevel] = mapped_column(nullable=False)
 
     # Relationships
-    namespace: Mapped["Namespace"] = relationship(back_populates="permissions")  # noqa: F821
+    namespace: Mapped[Namespace] = relationship(back_populates="permissions")
 
     @validates("group_name")
     def validate_group_name(self, _key: str, value: str) -> str:

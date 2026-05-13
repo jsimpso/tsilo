@@ -4,6 +4,7 @@ import hashlib
 import uuid
 from datetime import UTC, datetime
 from functools import cmp_to_key
+from typing import Any
 
 import structlog
 from sqlalchemy import select
@@ -42,13 +43,17 @@ def _semver_compare(a: str, b: str) -> int:
     b_parsed = parse_version(b)
 
     # Compare major.minor.patch
-    for i in range(3):
-        if a_parsed[i] != b_parsed[i]:
-            return a_parsed[i] - b_parsed[i]
+    a_major, a_minor, a_patch, a_pre = a_parsed
+    b_major, b_minor, b_patch, b_pre = b_parsed
+
+    if a_major != b_major:
+        return a_major - b_major
+    if a_minor != b_minor:
+        return a_minor - b_minor
+    if a_patch != b_patch:
+        return a_patch - b_patch
 
     # Pre-release versions have lower precedence than release
-    a_pre = a_parsed[3]
-    b_pre = b_parsed[3]
     if a_pre and not b_pre:
         return -1
     if not a_pre and b_pre:
@@ -77,7 +82,7 @@ class VersionService:
         cache_key = f"versions:{namespace}/{name}/{provider}"
         cached = module_cache.get(cache_key)
         if cached is not None:
-            return cached
+            return list(cached)
 
         # Find the module
         stmt = (
@@ -104,7 +109,7 @@ class VersionService:
         # Get all versions
         versions_stmt = select(ModuleVersion.version).where(ModuleVersion.module_id == module.id)
         versions_result = await self._db.execute(versions_stmt)
-        versions = list(versions_result.scalars().all())
+        versions: list[str] = list(versions_result.scalars().all())
 
         # Sort in descending semantic version order
         versions.sort(key=cmp_to_key(_semver_compare), reverse=True)
@@ -123,7 +128,7 @@ class VersionService:
 
     async def get_version(
         self, namespace: str, name: str, provider: str, version: str
-    ) -> dict | None:
+    ) -> dict[str, Any] | None:
         """Get a specific module version.
 
         Returns None if the module or version does not exist.
@@ -194,7 +199,7 @@ class VersionService:
         version: str,
         file_data: bytes,
         user_id: uuid.UUID,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Create a new module version from an uploaded package.
 
         Handles: parsing, checksum, S3 upload, DB record + DownloadMetric.

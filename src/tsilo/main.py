@@ -7,10 +7,11 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.exceptions import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from starlette.middleware.base import RequestResponseEndpoint
 from starlette.middleware.sessions import SessionMiddleware
 
 from tsilo.config import get_settings
@@ -65,7 +66,7 @@ _shutting_down = False
 
 
 @app.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     """Handle graceful shutdown - dispose database engine and clear caches."""
     global _shutting_down
     _shutting_down = True
@@ -91,7 +92,14 @@ async def shutdown_event():
 
 
 # Exception handlers
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+async def _handle_rate_limit(request: Request, exc: Exception) -> Response:
+    """Wrap slowapi's rate limit handler for type compatibility."""
+    assert isinstance(exc, RateLimitExceeded)
+    result: Response = _rate_limit_exceeded_handler(request, exc)
+    return result
+
+
+app.add_exception_handler(RateLimitExceeded, _handle_rate_limit)
 
 _STATUS_TITLES = {
     401: "Unauthorized",
@@ -105,7 +113,7 @@ _STATUS_TITLES = {
 
 
 @app.exception_handler(HTTPException)
-async def terraform_compatible_error_handler(request: Request, exc: HTTPException):
+async def terraform_compatible_error_handler(request: Request, exc: HTTPException) -> JSONResponse:
     """Return errors in Terraform-compatible format for registry API endpoints."""
     path = request.url.path
     if path.startswith("/v1/modules/") or path.startswith("/.well-known/"):
@@ -160,7 +168,7 @@ app.mount(
 
 
 @app.middleware("http")
-async def add_security_headers(request, call_next):
+async def add_security_headers(request: Request, call_next: RequestResponseEndpoint) -> Response:
     """Add security headers to all responses."""
     response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
@@ -211,7 +219,9 @@ _CSRF_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 
 
 @app.middleware("http")
-async def csrf_protection(request: Request, call_next):
+async def csrf_protection(
+    request: Request, call_next: RequestResponseEndpoint
+) -> Response | JSONResponse:
     """Validate X-CSRF-Token header for state-changing requests from web UI sessions.
 
     Bearer token authenticated requests are exempt (API/CI usage).
@@ -267,37 +277,39 @@ STATIC_DIR = Path("src/tsilo/static")
 
 
 @app.get("/", include_in_schema=False)
-async def homepage():
+async def homepage() -> FileResponse:
     """Serve the static homepage."""
     return FileResponse(STATIC_DIR / "index.html", media_type="text/html")
 
 
 @app.get("/modules/{namespace}/{name}/{provider}", include_in_schema=False)
 @app.get("/modules/{namespace}/{name}/{provider}/{version}", include_in_schema=False)
-async def module_detail_page(namespace: str, name: str, provider: str, version: str | None = None):
+async def module_detail_page(
+    namespace: str, name: str, provider: str, version: str | None = None
+) -> FileResponse:
     """Serve the module detail SPA page (client-side routing)."""
     return FileResponse(STATIC_DIR / "module-detail.html", media_type="text/html")
 
 
 @app.get("/upload", include_in_schema=False)
-async def upload_page():
+async def upload_page() -> FileResponse:
     """Serve the module upload page."""
     return FileResponse(STATIC_DIR / "upload.html", media_type="text/html")
 
 
 @app.get("/namespaces", include_in_schema=False)
-async def namespaces_page():
+async def namespaces_page() -> FileResponse:
     """Serve the namespace management page."""
     return FileResponse(STATIC_DIR / "namespaces.html", media_type="text/html")
 
 
 @app.get("/tokens", include_in_schema=False)
-async def tokens_page():
+async def tokens_page() -> FileResponse:
     """Serve the API token management page."""
     return FileResponse(STATIC_DIR / "tokens.html", media_type="text/html")
 
 
 @app.get("/metrics-dashboard", include_in_schema=False)
-async def metrics_dashboard_page():
+async def metrics_dashboard_page() -> FileResponse:
     """Serve the metrics dashboard page (admin only)."""
     return FileResponse(STATIC_DIR / "metrics-dashboard.html", media_type="text/html")

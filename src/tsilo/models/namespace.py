@@ -1,12 +1,19 @@
 """Namespace model - logical container for modules."""
 
+from __future__ import annotations
+
 import re
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import String, Text, Unicode
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from tsilo.models import Base, TimestampMixin, generate_uuid
+
+if TYPE_CHECKING:
+    from tsilo.models.module import Module
+    from tsilo.models.permission import NamespacePermission
 
 NAMESPACE_NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{0,98}[a-z0-9]$")
 
@@ -22,10 +29,10 @@ class Namespace(Base, TimestampMixin):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships
-    modules: Mapped[list["Module"]] = relationship(  # noqa: F821
+    modules: Mapped[list[Module]] = relationship(
         back_populates="namespace", cascade="all, delete-orphan"
     )
-    permissions: Mapped[list["NamespacePermission"]] = relationship(  # noqa: F821
+    permissions: Mapped[list[NamespacePermission]] = relationship(
         back_populates="namespace", cascade="all, delete-orphan"
     )
 

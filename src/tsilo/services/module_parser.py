@@ -3,6 +3,7 @@
 import io
 import re
 import tarfile
+from typing import Any
 
 import structlog
 
@@ -38,7 +39,7 @@ class ParseError(Exception):
 class ModuleParser:
     """Parses a Terraform module .tar.gz package to extract metadata."""
 
-    def parse(self, file_data: bytes) -> dict:
+    def parse(self, file_data: bytes) -> dict[str, Any]:
         """Parse a .tar.gz module package.
 
         Returns a dict with keys: inputs, outputs, readme, tf_files.
@@ -50,10 +51,10 @@ class ModuleParser:
         except (tarfile.TarError, EOFError, OSError) as e:
             raise ParseError(f"Invalid .tar.gz archive: {e}") from e
 
-    def _extract_metadata(self, tar: tarfile.TarFile) -> dict:
+    def _extract_metadata(self, tar: tarfile.TarFile) -> dict[str, Any]:
         """Extract inputs, outputs, and README from tar archive members."""
-        inputs: list[dict] = []
-        outputs: list[dict] = []
+        inputs: list[dict[str, Any]] = []
+        outputs: list[dict[str, Any]] = []
         readme: str | None = None
         tf_files_found = False
 
@@ -127,7 +128,7 @@ class ModuleParser:
             logger.warning("failed_to_read_member", member=member.name)
             return None
 
-    def _parse_variables(self, content: str) -> list[dict]:
+    def _parse_variables(self, content: str) -> list[dict[str, Any]]:
         """Parse variable blocks from HCL content."""
         variables = []
         for match in _VARIABLE_BLOCK_RE.finditer(content):
@@ -163,7 +164,7 @@ class ModuleParser:
 
         return variables
 
-    def _parse_outputs(self, content: str) -> list[dict]:
+    def _parse_outputs(self, content: str) -> list[dict[str, Any]]:
         """Parse output blocks from HCL content."""
         results = []
         for match in _OUTPUT_BLOCK_RE.finditer(content):
@@ -184,7 +185,7 @@ class ModuleParser:
 
         return results
 
-    def _deduplicate(self, items: list[dict]) -> list[dict]:
+    def _deduplicate(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Remove duplicate entries by name, keeping the first occurrence."""
         seen: set[str] = set()
         result = []

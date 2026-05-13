@@ -32,9 +32,9 @@ def _make_tar_gz() -> bytes:
     """Create a valid module .tar.gz archive."""
     files = {
         "main.tf": 'resource "null_resource" "example" {}',
-        "variables.tf": ('variable "name" {\n  type = string' '\n  description = "The name"\n}'),
+        "variables.tf": ('variable "name" {\n  type = string\n  description = "The name"\n}'),
         "outputs.tf": (
-            'output "id" {\n  value = null_resource.example.id' '\n  description = "The ID"\n}'
+            'output "id" {\n  value = null_resource.example.id\n  description = "The ID"\n}'
         ),
         "README.md": "# Test Module\n\nA test module for integration testing.",
     }

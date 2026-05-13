@@ -1,14 +1,22 @@
 """ModuleVersion model - specific version of a module with metadata and package location."""
 
+from __future__ import annotations
+
 import re
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import BigInteger, DateTime, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from tsilo.models import Base, generate_uuid
+
+if TYPE_CHECKING:
+    from tsilo.models.metric import DownloadMetric
+    from tsilo.models.module import Module
+    from tsilo.models.user import User
 
 SEMVER_PATTERN = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
@@ -28,8 +36,8 @@ class ModuleVersion(Base):
         ForeignKey("modules.id", ondelete="CASCADE"), nullable=False, index=True
     )
     version: Mapped[str] = mapped_column(String(50), nullable=False)
-    inputs: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
-    outputs: Mapped[list] = mapped_column(JSONB, nullable=False, default=list)
+    inputs: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, default=list)
+    outputs: Mapped[list[Any]] = mapped_column(JSONB, nullable=False, default=list)
     readme: Mapped[str | None] = mapped_column(Text, nullable=True)
     package_url: Mapped[str] = mapped_column(String(1000), nullable=False)
     package_size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
@@ -45,9 +53,9 @@ class ModuleVersion(Base):
     )
 
     # Relationships
-    module: Mapped["Module"] = relationship(back_populates="versions")  # noqa: F821
-    publisher: Mapped["User | None"] = relationship()  # noqa: F821
-    download_metric: Mapped["DownloadMetric | None"] = relationship(  # noqa: F821
+    module: Mapped[Module] = relationship(back_populates="versions")
+    publisher: Mapped[User | None] = relationship()
+    download_metric: Mapped[DownloadMetric | None] = relationship(
         back_populates="version", uselist=False, cascade="all, delete-orphan"
     )
 

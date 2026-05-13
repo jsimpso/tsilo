@@ -3,9 +3,10 @@
 import math
 from datetime import UTC
 from functools import cmp_to_key
+from typing import Any
 
 import structlog
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -26,10 +27,10 @@ class ModuleService:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    def _authorized_namespaces_filter(self, user: CurrentUser, query: Select) -> Select:
+    def _authorized_namespaces_filter(self, user: CurrentUser, query: Select[Any]) -> Select[Any]:
         """Filter query to only include modules from namespaces the user can read."""
         if not user.groups:
-            return query.where(False)  # No groups => no access
+            return query.where(text("FALSE"))  # No groups => no access
 
         subq = (
             select(Namespace.id)
@@ -52,7 +53,7 @@ class ModuleService:
         search: str | None = None,
         page: int = 1,
         per_page: int = 20,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """List modules with optional filtering and pagination.
 
         Only returns modules from namespaces the user has read access to.
@@ -94,16 +95,20 @@ class ModuleService:
         items = []
         for mod in modules:
             # Calculate aggregates
-            versions = mod.versions or []
+            versions: list[ModuleVersion] = mod.versions or []
             version_count = len(versions)
 
             # Get latest version by semver
             latest_version = None
             last_updated = mod.updated_at
             if versions:
+
+                def _version_cmp(a: ModuleVersion, b: ModuleVersion) -> int:
+                    return _semver_compare(a.version, b.version)
+
                 sorted_versions = sorted(
                     versions,
-                    key=cmp_to_key(lambda a, b: _semver_compare(a.version, b.version)),
+                    key=cmp_to_key(_version_cmp),
                     reverse=True,
                 )
                 latest_version = sorted_versions[0].version
@@ -145,7 +150,7 @@ class ModuleService:
 
     async def get_module_with_versions(
         self, namespace: str, name: str, provider: str
-    ) -> dict | None:
+    ) -> dict[str, Any] | None:
         """Get detailed module info with all versions.
 
         Returns None if module not found.
@@ -203,7 +208,7 @@ class ModuleService:
 
         # Sort versions descending
         versions_data.sort(
-            key=cmp_to_key(lambda a, b: _semver_compare(a["version"], b["version"])),
+            key=cmp_to_key(lambda a, b: _semver_compare(str(a["version"]), str(b["version"]))),
             reverse=True,
         )
 
@@ -224,7 +229,7 @@ class ModuleService:
 
     async def get_version_detail(
         self, namespace: str, name: str, provider: str, version: str
-    ) -> dict | None:
+    ) -> dict[str, Any] | None:
         """Get detailed version info including inputs, outputs, and README.
 
         Returns None if not found.

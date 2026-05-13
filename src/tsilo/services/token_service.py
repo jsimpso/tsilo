@@ -4,6 +4,7 @@ import hashlib
 import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import structlog
 from sqlalchemy import select
@@ -40,7 +41,7 @@ class TokenService:
         self,
         user_id: uuid.UUID,
         name: str,
-        scopes: list[dict] | None = None,
+        scopes: list[dict[str, Any]] | None = None,
         expires_in_days: int | None = None,
     ) -> tuple[APIToken, str]:
         """Create a new API token for a user.

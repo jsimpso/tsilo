@@ -1,6 +1,7 @@
 """Permission service - namespace access control based on user groups."""
 
 import uuid
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,7 +30,7 @@ class PermissionService:
         cache_key = f"read:{namespace_name}:{','.join(sorted(user.groups))}"
         cached = permission_cache.get(cache_key)
         if cached is not None:
-            return cached
+            return bool(cached)
 
         stmt = (
             select(NamespacePermission)
@@ -61,7 +62,7 @@ class PermissionService:
         cache_key = f"write:{namespace_name}:{','.join(sorted(user.groups))}"
         cached = permission_cache.get(cache_key)
         if cached is not None:
-            return cached
+            return bool(cached)
 
         stmt = (
             select(NamespacePermission)
@@ -100,7 +101,7 @@ class PermissionService:
         result = await self._db.execute(stmt)
         return list(result.scalars().all())
 
-    async def list_namespace_permissions(self, namespace_name: str) -> list[dict]:
+    async def list_namespace_permissions(self, namespace_name: str) -> list[dict[str, Any]]:
         """List all permissions for a namespace."""
         stmt = (
             select(NamespacePermission)
@@ -126,7 +127,7 @@ class PermissionService:
         namespace_name: str,
         group_name: str,
         permission_level: str,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Create a new permission for a namespace.
 
         Raises ValueError if the permission already exists.

@@ -1,12 +1,18 @@
 """DownloadMetric model - tracks usage data for module versions."""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import BigInteger, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from tsilo.models import Base, TimestampMixin, generate_uuid
+
+if TYPE_CHECKING:
+    from tsilo.models.version import ModuleVersion
 
 
 class DownloadMetric(Base, TimestampMixin):
@@ -24,7 +30,7 @@ class DownloadMetric(Base, TimestampMixin):
     )
 
     # Relationships
-    version: Mapped["ModuleVersion"] = relationship(back_populates="download_metric")  # noqa: F821
+    version: Mapped[ModuleVersion] = relationship(back_populates="download_metric")
 
     def __repr__(self) -> str:
         return f"<DownloadMetric(version_id={self.version_id}, count={self.download_count})>"

@@ -1,5 +1,7 @@
 """Namespace service - listing, creating, and managing namespaces with permissions."""
 
+from typing import Any
+
 import structlog
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +21,7 @@ class NamespaceService:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    async def list_user_namespaces(self, user: CurrentUser) -> list[dict]:
+    async def list_user_namespaces(self, user: CurrentUser) -> list[dict[str, Any]]:
         """List namespaces the user has access to, with module counts and permissions."""
         if not user.groups:
             return []
@@ -76,7 +78,7 @@ class NamespaceService:
         name: str,
         display_name: str | None = None,
         description: str | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Create a new namespace.
 
         Raises ValueError if namespace name already exists.

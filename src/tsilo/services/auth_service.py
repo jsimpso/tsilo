@@ -1,6 +1,7 @@
 """OIDC authentication service - OAuth client configuration and token validation."""
 
 from datetime import UTC, datetime
+from typing import Any
 
 import httpx
 from authlib.integrations.starlette_client import OAuth
@@ -68,7 +69,7 @@ class AuthService:
         result = await self._db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def validate_oidc_token(self, token: str) -> dict | None:
+    async def validate_oidc_token(self, token: str) -> dict[str, Any] | None:
         """Validate an OIDC access token by calling the userinfo endpoint.
 
         Returns the user info claims dict or None if invalid.
@@ -94,7 +95,8 @@ class AuthService:
                 )
                 if resp.status_code == 200:
                     oidc_breaker.record_success()
-                    return resp.json()
+                    result: dict[str, Any] = resp.json()
+                    return result
         except Exception:
             oidc_breaker.record_failure()
         return None

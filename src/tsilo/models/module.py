@@ -1,12 +1,19 @@
 """Module model - represents a Terraform module identified by namespace, name, and provider."""
 
+from __future__ import annotations
+
 import re
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from tsilo.models import Base, TimestampMixin, generate_uuid
+
+if TYPE_CHECKING:
+    from tsilo.models.namespace import Namespace
+    from tsilo.models.version import ModuleVersion
 
 MODULE_NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]{0,98}[a-z0-9]$")
 PROVIDER_PATTERN = re.compile(r"^[a-z0-9-]+$")
@@ -32,8 +39,8 @@ class Module(Base, TimestampMixin):
     source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Relationships
-    namespace: Mapped["Namespace"] = relationship(back_populates="modules")  # noqa: F821
-    versions: Mapped[list["ModuleVersion"]] = relationship(  # noqa: F821
+    namespace: Mapped[Namespace] = relationship(back_populates="modules")
+    versions: Mapped[list[ModuleVersion]] = relationship(
         back_populates="module", cascade="all, delete-orphan"
     )
 

@@ -1,5 +1,7 @@
 """Terraform Module Registry Protocol endpoints."""
 
+from typing import Any
+
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Response, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -272,7 +274,7 @@ async def upload_module(
     )
 
 
-def _upload_response_json(result: dict) -> str:
+def _upload_response_json(result: dict[str, Any]) -> str:
     """Serialize the upload result to JSON."""
     import json
 

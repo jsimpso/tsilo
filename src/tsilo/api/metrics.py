@@ -1,6 +1,7 @@
 """Health check, Prometheus metrics, admin metrics, and maintenance endpoints."""
 
 import time
+from typing import Any
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -41,8 +42,8 @@ def increment_download_count() -> None:
     _metrics["downloads_total"] += 1
 
 
-@router.get("/health")
-async def health_check() -> dict:
+@router.get("/health", response_model=None)
+async def health_check() -> dict[str, Any] | Response:
     """Health check endpoint with database and S3 connectivity checks.
 
     Returns:
@@ -107,15 +108,15 @@ async def prometheus_metrics(
     lines = [
         "# HELP tsilo_requests_total Total number of HTTP requests.",
         "# TYPE tsilo_requests_total counter",
-        f'tsilo_requests_total {_metrics["requests_total"]}',
+        f"tsilo_requests_total {_metrics['requests_total']}",
         "",
         "# HELP tsilo_requests_duration_seconds_sum Total request duration in seconds.",
         "# TYPE tsilo_requests_duration_seconds_sum counter",
-        f'tsilo_requests_duration_seconds_sum {_metrics["requests_duration_seconds_sum"]:.6f}',
+        f"tsilo_requests_duration_seconds_sum {_metrics['requests_duration_seconds_sum']:.6f}",
         "",
         "# HELP tsilo_downloads_total Total number of module downloads.",
         "# TYPE tsilo_downloads_total counter",
-        f'tsilo_downloads_total {_metrics["downloads_total"]}',
+        f"tsilo_downloads_total {_metrics['downloads_total']}",
         "",
     ]
 
@@ -213,7 +214,7 @@ async def prometheus_metrics(
 async def cleanup_oauth_codes(
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Delete expired and used OAuth authorization codes.
 
     Removes codes expired >24h ago and used codes older than 7 days.
@@ -236,7 +237,7 @@ async def cleanup_oauth_codes(
 async def calculate_metrics(
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> dict[str, Any]:
     """Aggregate download counts and identify deprecated versions.
 
     Admin only. Intended to be called hourly by a cron job or scheduler.

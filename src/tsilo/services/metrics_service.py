@@ -3,6 +3,7 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 from functools import cmp_to_key
+from typing import Any
 
 import structlog
 from sqlalchemy import func, select, update
@@ -48,7 +49,7 @@ class MetricsService:
             timestamp=now.isoformat(),
         )
 
-    async def get_system_metrics(self) -> dict:
+    async def get_system_metrics(self) -> dict[str, Any]:
         """Get system-wide metrics for admin overview dashboard."""
         now = datetime.now(tz=UTC)
         thirty_days_ago = now - timedelta(days=30)
@@ -153,7 +154,9 @@ class MetricsService:
             "namespace_usage": namespace_usage,
         }
 
-    async def get_module_metrics(self, namespace: str, name: str, provider: str) -> dict | None:
+    async def get_module_metrics(
+        self, namespace: str, name: str, provider: str
+    ) -> dict[str, Any] | None:
         """Get detailed metrics for a specific module.
 
         Returns None if the module is not found.
@@ -205,7 +208,7 @@ class MetricsService:
 
         # Sort versions descending by semver
         downloads_by_version.sort(
-            key=cmp_to_key(lambda a, b: _semver_compare(a["version"], b["version"])),
+            key=cmp_to_key(lambda a, b: _semver_compare(str(a["version"]), str(b["version"]))),
             reverse=True,
         )
 
@@ -218,7 +221,7 @@ class MetricsService:
             "downloads_over_time": downloads_over_time,
         }
 
-    async def _get_downloads_over_time(self, module_id: uuid.UUID) -> list[dict]:
+    async def _get_downloads_over_time(self, module_id: uuid.UUID) -> list[dict[str, Any]]:
         """Get daily download approximation for the last 30 days.
 
         Since we only track aggregate counts, this returns a simplified
@@ -265,7 +268,7 @@ class MetricsService:
         now = datetime.now(tz=UTC)
         return (now - last_download_at).days > DEPRECATION_THRESHOLD_DAYS
 
-    async def flag_deprecated_versions(self) -> list[dict]:
+    async def flag_deprecated_versions(self) -> list[dict[str, Any]]:
         """Identify module versions that should be flagged as deprecated.
 
         Returns a list of deprecated version info dicts.

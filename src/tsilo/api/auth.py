@@ -21,18 +21,19 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.get("/login")
-async def login(request: Request):
+async def login(request: Request) -> RedirectResponse:
     """Initiate OIDC login flow by redirecting to the OIDC provider."""
     redirect_uri = settings.oidc_redirect_uri
     oidc_client = oauth.create_client("oidc")
-    return await oidc_client.authorize_redirect(request, redirect_uri)
+    response: RedirectResponse = await oidc_client.authorize_redirect(request, redirect_uri)
+    return response
 
 
 @router.get("/callback")
 async def callback(
     request: Request,
     db: AsyncSession = Depends(get_db),
-):
+) -> RedirectResponse:
     """Handle OIDC authorization code callback.
 
     Exchanges the code for tokens, creates/updates the user, and sets a session cookie.
@@ -110,7 +111,7 @@ async def callback(
 async def logout(
     request: Request,
     current_user: CurrentUser = Depends(get_current_user),
-):
+) -> JSONResponse:
     """Terminate user session and clear the session cookie."""
     logger.info(
         "user_logged_out",
@@ -126,7 +127,7 @@ async def logout(
 
 
 @router.get("/me")
-async def me(current_user: CurrentUser = Depends(get_current_user)):
+async def me(current_user: CurrentUser = Depends(get_current_user)) -> JSONResponse:
     """Get current authenticated user information."""
 
     return JSONResponse(
@@ -157,7 +158,7 @@ async def oauth_authorization(
     response_type: str | None = None,
     state: str | None = None,
     db: AsyncSession = Depends(get_db),
-):
+) -> Response:
     """OAuth 2.0 authorization endpoint for Terraform CLI login.
 
     Validates parameters, redirects unauthenticated users to OIDC login,
@@ -206,7 +207,7 @@ async def oauth_authorization(
             content={
                 "error": "invalid_request",
                 "error_description": (
-                    "redirect_uri must be http://localhost" " with port in range 10000-10010"
+                    "redirect_uri must be http://localhost with port in range 10000-10010"
                 ),
             },
         )
