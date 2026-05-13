@@ -1,9 +1,11 @@
 """FastAPI application entry point - app initialization, middleware, CORS, security headers."""
 
+import asyncio
 import hashlib
 import hmac
 import json
 import secrets
+import signal
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -34,6 +36,33 @@ app = FastAPI(
 
 # Rate limiter state
 app.state.limiter = limiter
+
+# Graceful shutdown: drain connections and complete in-flight requests
+_shutting_down = False
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Handle graceful shutdown - dispose database engine and clear caches."""
+    global _shutting_down
+    _shutting_down = True
+
+    import structlog
+    log = structlog.get_logger("tsilo.shutdown")
+    log.info("graceful_shutdown_initiated")
+
+    # Dispose the async database engine to drain connection pool
+    from tsilo.models import get_engine
+    engine = get_engine()
+    await engine.dispose()
+    log.info("database_connections_drained")
+
+    # Clear in-memory caches
+    from tsilo.services.cache import module_cache, permission_cache
+    module_cache.clear()
+    permission_cache.clear()
+    log.info("caches_cleared")
+
 
 # Exception handlers
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
