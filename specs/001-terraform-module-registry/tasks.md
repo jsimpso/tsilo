@@ -158,21 +158,21 @@
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T070 [P] [US4] Integration test for namespace isolation in tests/integration/test_namespace_isolation.py: verify user can't access unauthorized namespaces, permissions enforced on all endpoints
-- [ ] T071 [P] [US4] Integration test for permission management in tests/integration/test_permission_management.py: create/update/delete permissions, verify access control updates
+- [x] T070 [P] [US4] Integration test for namespace isolation in tests/integration/test_namespace_isolation.py: verify user can't access unauthorized namespaces, permissions enforced on all endpoints
+- [x] T071 [P] [US4] Integration test for permission management in tests/integration/test_permission_management.py: create/update/delete permissions, verify access control updates
 
 ### Implementation for User Story 4
 
-- [ ] T072 [P] [US4] Create Pydantic schemas for namespace API in src/tsilo/schemas/namespace.py: NamespaceCreate, NamespaceResponse, PermissionResponse
-- [ ] T073 [US4] Implement namespace listing endpoint in src/tsilo/api/namespaces.py: GET /api/namespaces (only namespaces user has access to)
-- [ ] T074 [US4] Create namespace service in src/tsilo/services/namespace_service.py: list_user_namespaces, create_namespace, get_namespace_permissions
-- [ ] T075 [US4] Implement namespace creation endpoint in src/tsilo/api/namespaces.py: POST /api/namespaces (admin only, validate name pattern)
-- [ ] T076 [US4] Implement permission listing endpoint in src/tsilo/api/namespaces.py: GET /api/namespaces/:namespace/permissions
-- [ ] T077 [US4] Enhance permission service in src/tsilo/services/permission_service.py: add create_permission, delete_permission, list_namespace_permissions
-- [ ] T078 [US4] Update module listing to filter by user permissions: only show modules from authorized namespaces
-- [ ] T079 [US4] Update search to respect namespace permissions: exclude unauthorized modules from results
-- [ ] T080 [P] [US4] Create namespace management UI in web UI: list namespaces, create namespace form, permission management interface (admin only)
-- [ ] T081 [US4] Add permission check to all module operations: download (read), upload (write), view metadata (read)
+- [x] T072 [P] [US4] Create Pydantic schemas for namespace API in src/tsilo/schemas/namespace.py: NamespaceCreate, NamespaceResponse, PermissionResponse
+- [x] T073 [US4] Implement namespace listing endpoint in src/tsilo/api/namespaces.py: GET /api/namespaces (only namespaces user has access to)
+- [x] T074 [US4] Create namespace service in src/tsilo/services/namespace_service.py: list_user_namespaces, create_namespace, get_namespace_permissions
+- [x] T075 [US4] Implement namespace creation endpoint in src/tsilo/api/namespaces.py: POST /api/namespaces (admin only, validate name pattern)
+- [x] T076 [US4] Implement permission listing endpoint in src/tsilo/api/namespaces.py: GET /api/namespaces/:namespace/permissions
+- [x] T077 [US4] Enhance permission service in src/tsilo/services/permission_service.py: add create_permission, delete_permission, list_namespace_permissions
+- [x] T078 [US4] Update module listing to filter by user permissions: only show modules from authorized namespaces
+- [x] T079 [US4] Update search to respect namespace permissions: exclude unauthorized modules from results
+- [x] T080 [P] [US4] Create namespace management UI in web UI: list namespaces, create namespace form, permission management interface (admin only)
+- [x] T081 [US4] Add permission check to all module operations: download (read), upload (write), view metadata (read)
 
 **Checkpoint**: Multi-tenancy fully enforced; namespace permissions control all access
 
