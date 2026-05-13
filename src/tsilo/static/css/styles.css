@@ -18,9 +18,9 @@
     --color-bg: #f8f9fa;
     --color-surface: #ffffff;
     --color-text: #1a1a2e;
-    --color-text-secondary: #6b7280;
-    --color-border: #e5e7eb;
-    --color-border-hover: #d1d5db;
+    --color-text-secondary: #4b5563;
+    --color-border: #d1d5db;
+    --color-border-hover: #9ca3af;
     --color-error: #dc2626;
     --color-success: #16a34a;
     --color-warning: #d97706;
@@ -793,6 +793,15 @@ a:hover {
 }
 
 /* === Focus visible for accessibility === */
+:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+    outline: none;
+}
+
 :focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;

@@ -9,11 +9,12 @@
     {% block head %}{% endblock %}
 </head>
 <body>
+    <a class="sr-only" href="#main-content">Skip to main content</a>
     <header class="site-header">
-        <nav class="nav-container">
+        <nav class="nav-container" aria-label="Main navigation">
             <a href="/" class="nav-logo">Tsilo</a>
-            <div class="nav-links">
-                <a href="/" class="nav-link">Modules</a>
+            <div class="nav-links" role="list">
+                <a href="/" class="nav-link" role="listitem">Modules</a>
             </div>
             <div class="nav-auth" id="nav-auth">
                 <a href="/auth/login" class="btn btn-primary btn-sm">Sign In</a>
@@ -21,7 +22,7 @@
         </nav>
     </header>
 
-    <main class="main-content">
+    <main class="main-content" id="main-content">
         {% block content %}{% endblock %}
     </main>
 

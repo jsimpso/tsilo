@@ -37,7 +37,7 @@
                 You can also use <code>terraform login</code> to generate tokens automatically.
             </p>
 
-            <div id="error-message" class="alert alert-error" hidden></div>
+            <div id="error-message" class="alert alert-error" role="alert" hidden></div>
 
             <div id="token-created-banner" class="alert alert-success" hidden>
                 <strong>Token created!</strong>
@@ -58,11 +58,11 @@
         </section>
 
         <!-- Create Token Modal -->
-        <div id="create-token-modal" class="modal" hidden>
+        <div id="create-token-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="create-token-modal-title" hidden>
             <div class="modal-backdrop"></div>
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Create API Token</h2>
+                    <h2 id="create-token-modal-title">Create API Token</h2>
                     <button class="modal-close" aria-label="Close">&times;</button>
                 </div>
                 <form id="create-token-form" class="modal-body">
@@ -76,8 +76,9 @@
                             required
                             maxlength="200"
                             autocomplete="off"
+                            aria-describedby="token-name-help"
                         >
-                        <span class="form-help">A descriptive name for this token.</span>
+                        <span id="token-name-help" class="form-help">A descriptive name for this token.</span>
                     </div>
 
                     <div class="form-group">
@@ -90,8 +91,9 @@
                             min="1"
                             max="3650"
                             autocomplete="off"
+                            aria-describedby="token-expiry-help"
                         >
-                        <span class="form-help">Number of days before the token expires. Leave empty for no expiry.</span>
+                        <span id="token-expiry-help" class="form-help">Number of days before the token expires. Leave empty for no expiry.</span>
                     </div>
 
                     <div class="form-group">

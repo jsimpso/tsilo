@@ -33,7 +33,7 @@
             </div>
         </div>
 
-        <div id="metrics-error" class="error-container" hidden>
+        <div id="metrics-error" class="error-container" role="alert" hidden>
             <h2>Access Denied</h2>
             <p id="error-message">You need admin access to view system metrics.</p>
             <a href="/" class="btn btn-primary">Back to Modules</a>
@@ -74,6 +74,7 @@
                 <div class="metrics-table-container">
                     <h2>Top Modules</h2>
                     <table class="data-table" id="top-modules-table">
+                        <caption class="sr-only">Top modules by download count</caption>
                         <thead>
                             <tr>
                                 <th>Module</th>
@@ -89,6 +90,7 @@
                 <div class="metrics-table-container">
                     <h2>Namespace Usage</h2>
                     <table class="data-table" id="namespace-usage-table">
+                        <caption class="sr-only">Namespace usage statistics</caption>
                         <thead>
                             <tr>
                                 <th>Namespace</th>
