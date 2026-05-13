@@ -221,21 +221,21 @@
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T101 [P] [US6] Integration test for metrics tracking in tests/integration/test_metrics_tracking.py: download module, verify download_count incremented, last_download_at updated
-- [ ] T102 [P] [US6] Integration test for metrics display in tests/integration/test_metrics_display.py: verify metrics API returns accurate data, test deprecation flag for old versions
+- [x] T101 [P] [US6] Integration test for metrics tracking in tests/integration/test_metrics_tracking.py: download module, verify download_count incremented, last_download_at updated
+- [x] T102 [P] [US6] Integration test for metrics display in tests/integration/test_metrics_display.py: verify metrics API returns accurate data, test deprecation flag for old versions
 
 ### Implementation for User Story 6
 
-- [ ] T103 [P] [US6] Create Pydantic schemas for metrics in src/tsilo/schemas/metrics.py: MetricsOverview, ModuleMetrics, DownloadTrend
-- [ ] T104 [US6] Enhance metrics service in src/tsilo/services/metrics_service.py: get_module_metrics, get_system_metrics, flag_deprecated_versions (90+ days no downloads)
-- [ ] T105 [US6] Implement system metrics endpoint in src/tsilo/api/metrics.py: GET /api/metrics/overview (admin only) with total_modules, total_downloads, top_modules, namespace_usage
-- [ ] T106 [US6] Implement module metrics endpoint in src/tsilo/api/metrics.py: GET /api/metrics/modules/:namespace/:name/:provider with downloads_by_version, downloads_over_time
-- [ ] T107 [US6] Update module detail endpoint to include download metrics: total_downloads, last_download_at for each version
-- [ ] T108 [US6] Add deprecation flag to version responses: mark versions with last_download_at > 90 days ago as deprecated
-- [ ] T109 [US6] Create metrics calculation job: aggregate download counts, identify deprecated versions, update cache (runs hourly)
-- [ ] T110 [P] [US6] Create metrics dashboard UI in web UI: system overview charts, top modules table, namespace usage breakdown (admin only)
-- [ ] T111 [P] [US6] Add download metrics to module detail page: version-level download counts, last download timestamps, deprecation warnings
-- [ ] T112 [US6] Update Prometheus metrics endpoint with module-specific metrics: download counts per module, deprecation flags, version distribution
+- [x] T103 [P] [US6] Create Pydantic schemas for metrics in src/tsilo/schemas/metrics.py: MetricsOverview, ModuleMetrics, DownloadTrend
+- [x] T104 [US6] Enhance metrics service in src/tsilo/services/metrics_service.py: get_module_metrics, get_system_metrics, flag_deprecated_versions (90+ days no downloads)
+- [x] T105 [US6] Implement system metrics endpoint in src/tsilo/api/metrics.py: GET /api/metrics/overview (admin only) with total_modules, total_downloads, top_modules, namespace_usage
+- [x] T106 [US6] Implement module metrics endpoint in src/tsilo/api/metrics.py: GET /api/metrics/modules/:namespace/:name/:provider with downloads_by_version, downloads_over_time
+- [x] T107 [US6] Update module detail endpoint to include download metrics: total_downloads, last_download_at for each version
+- [x] T108 [US6] Add deprecation flag to version responses: mark versions with last_download_at > 90 days ago as deprecated
+- [x] T109 [US6] Create metrics calculation job: aggregate download counts, identify deprecated versions, update cache (runs hourly)
+- [x] T110 [P] [US6] Create metrics dashboard UI in web UI: system overview charts, top modules table, namespace usage breakdown (admin only)
+- [x] T111 [P] [US6] Add download metrics to module detail page: version-level download counts, last download timestamps, deprecation warnings
+- [x] T112 [US6] Update Prometheus metrics endpoint with module-specific metrics: download counts per module, deprecation flags, version distribution
 
 **Checkpoint**: Download metrics tracked and displayed; deprecated versions identified; system-wide observability available
 
