@@ -116,8 +116,10 @@ async def add_security_headers(request, call_next):
 # Import and include routers
 from tsilo.api.auth import router as auth_router  # noqa: E402
 from tsilo.api.metrics import router as metrics_router  # noqa: E402
+from tsilo.api.modules import router as modules_router  # noqa: E402
 from tsilo.api.registry import router as registry_router  # noqa: E402
 
 app.include_router(auth_router)
 app.include_router(metrics_router)
+app.include_router(modules_router)
 app.include_router(registry_router)
