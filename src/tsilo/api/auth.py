@@ -1,14 +1,18 @@
-"""Authentication endpoints - OIDC login, callback, session, logout."""
+"""Authentication endpoints - OIDC login, callback, session, logout, OAuth 2.0 for Terraform CLI."""
+
+import json
+from urllib.parse import urlencode
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tsilo.config import get_settings
 from tsilo.middleware.auth import CurrentUser, get_current_user
 from tsilo.models import get_db
 from tsilo.services.auth_service import AuthService, oauth
+from tsilo.services.oauth_service import OAuthService, validate_redirect_uri
 
 logger = structlog.get_logger(__name__)
 settings = get_settings()
@@ -84,6 +88,19 @@ async def callback(
         auth_method="oidc",
     )
 
+    # Check if there's a pending OAuth authorization request (Terraform CLI login)
+    oauth_request = request.session.pop("oauth_request", None)
+    if oauth_request:
+        params = urlencode({
+            "client_id": oauth_request["client_id"],
+            "code_challenge": oauth_request["code_challenge"],
+            "code_challenge_method": oauth_request["code_challenge_method"],
+            "redirect_uri": oauth_request["redirect_uri"],
+            "response_type": "code",
+            "state": oauth_request["state"],
+        })
+        return RedirectResponse(url=f"/oauth/authorization?{params}", status_code=302)
+
     return RedirectResponse(url="/", status_code=302)
 
 
@@ -123,3 +140,101 @@ async def me(current_user: CurrentUser = Depends(get_current_user)):
         },
         status_code=200,
     )
+
+
+# --- OAuth 2.0 endpoints for Terraform CLI login ---
+
+oauth_router = APIRouter(prefix="/oauth", tags=["oauth"])
+
+
+@oauth_router.get("/authorization")
+async def oauth_authorization(
+    request: Request,
+    client_id: str | None = None,
+    code_challenge: str | None = None,
+    code_challenge_method: str | None = None,
+    redirect_uri: str | None = None,
+    response_type: str | None = None,
+    state: str | None = None,
+    db: AsyncSession = Depends(get_db),
+):
+    """OAuth 2.0 authorization endpoint for Terraform CLI login.
+
+    Validates parameters, redirects unauthenticated users to OIDC login,
+    then generates an authorization code and redirects back to the CLI.
+    """
+    # Validate required parameters
+    if not response_type or response_type != "code":
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "invalid_request",
+                "error_description": "response_type must be 'code'",
+            },
+        )
+
+    if not code_challenge:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "invalid_request",
+                "error_description": "code_challenge is required for PKCE",
+            },
+        )
+
+    if not code_challenge_method or code_challenge_method != "S256":
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "invalid_request",
+                "error_description": "code_challenge_method must be 'S256'",
+            },
+        )
+
+    if not state:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "invalid_request",
+                "error_description": "state parameter is required",
+            },
+        )
+
+    if not redirect_uri or not validate_redirect_uri(redirect_uri):
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "invalid_request",
+                "error_description": "redirect_uri must be http://localhost with port in range 10000-10010",
+            },
+        )
+
+    # Store OAuth request in session for after OIDC login
+    request.session["oauth_request"] = {
+        "client_id": client_id or "terraform-cli",
+        "code_challenge": code_challenge,
+        "code_challenge_method": code_challenge_method,
+        "redirect_uri": redirect_uri,
+        "state": state,
+    }
+
+    # Check if user is already authenticated
+    user_id = request.session.get("user_id")
+    if not user_id:
+        # Redirect to OIDC login; after login, callback will check for oauth_request
+        login_url = "/auth/login"
+        return RedirectResponse(url=login_url, status_code=302)
+
+    # User is authenticated - generate authorization code
+    oauth_service = OAuthService(db)
+    code = await oauth_service.generate_authorization_code(
+        user_id=user_id,
+        client_id=client_id or "terraform-cli",
+        redirect_uri=redirect_uri,
+        code_challenge=code_challenge,
+        code_challenge_method=code_challenge_method,
+    )
+
+    # Redirect back to CLI with code and state
+    params = urlencode({"code": code, "state": state})
+    return RedirectResponse(url=f"{redirect_uri}?{params}", status_code=302)
