@@ -272,16 +272,19 @@ async def upload_module(
 def _upload_response_json(result: dict) -> str:
     """Serialize the upload result to JSON."""
     import json
-    return json.dumps({
-        "id": str(result["id"]),
-        "namespace": result["namespace"],
-        "name": result["name"],
-        "provider": result["provider"],
-        "version": result["version"],
-        "inputs": result["inputs"],
-        "outputs": result["outputs"],
-        "package_url": result["package_url"],
-        "package_size_bytes": result["package_size_bytes"],
-        "checksum_sha256": result["checksum_sha256"],
-        "published_at": result["published_at"],
-    })
+
+    return json.dumps(
+        {
+            "id": str(result["id"]),
+            "namespace": result["namespace"],
+            "name": result["name"],
+            "provider": result["provider"],
+            "version": result["version"],
+            "inputs": result["inputs"],
+            "outputs": result["outputs"],
+            "package_url": result["package_url"],
+            "package_size_bytes": result["package_size_bytes"],
+            "checksum_sha256": result["checksum_sha256"],
+            "published_at": result["published_at"],
+        }
+    )

@@ -191,8 +191,7 @@ class VersionService:
         # Validate semver
         if not self.validate_semver(version):
             raise ValueError(
-                f"Invalid semantic version format: '{version}'. "
-                "Expected format: MAJOR.MINOR.PATCH (e.g., 1.0.0)"
+                f"Invalid semantic version format: '{version}'. " "Expected format: MAJOR.MINOR.PATCH (e.g., 1.0.0)"
             )
 
         # Check file size
@@ -214,9 +213,7 @@ class VersionService:
 
         # Upload to S3
         storage = StorageService()
-        package_url = storage.upload_module(
-            namespace, name, provider, version, file_data, checksum
-        )
+        package_url = storage.upload_module(namespace, name, provider, version, file_data, checksum)
 
         # Create ModuleVersion record
         now = datetime.now(tz=timezone.utc)
