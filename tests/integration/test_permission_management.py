@@ -63,14 +63,18 @@ async def test_permission_create_endpoint_exists(client):
 @pytest.mark.asyncio
 async def test_permission_delete_requires_auth(client):
     """DELETE /api/namespaces/:namespace/permissions/:id should require authentication."""
-    response = await client.delete("/api/namespaces/platform-team/permissions/00000000-0000-0000-0000-000000000001")
+    response = await client.delete(
+        "/api/namespaces/platform-team/permissions/00000000-0000-0000-0000-000000000001"
+    )
     assert response.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_permission_delete_endpoint_exists(client):
     """DELETE /api/namespaces/:namespace/permissions/:id should not return 404."""
-    response = await client.delete("/api/namespaces/platform-team/permissions/00000000-0000-0000-0000-000000000001")
+    response = await client.delete(
+        "/api/namespaces/platform-team/permissions/00000000-0000-0000-0000-000000000001"
+    )
     assert response.status_code != 404
 
 

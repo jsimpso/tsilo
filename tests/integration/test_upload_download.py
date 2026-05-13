@@ -49,7 +49,9 @@ def _make_tar_gz() -> bytes:
 @pytest.fixture
 async def client():
     """Create an async test client."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False) as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False
+    ) as ac:
         yield ac
 
 
@@ -109,7 +111,9 @@ async def test_upload_then_download_cycle(client, mock_auth, mock_db):
                 "name": name,
                 "provider": provider,
                 "version": version,
-                "inputs": [{"name": "name", "type": "string", "description": "The name", "required": True}],
+                "inputs": [
+                    {"name": "name", "type": "string", "description": "The name", "required": True}
+                ],
                 "outputs": [{"name": "id", "description": "The ID"}],
                 "package_url": f"s3://tsilo-modules/{ns}/{name}/{provider}/{version}/module.tar.gz",
                 "package_size_bytes": 1024,
@@ -167,7 +171,9 @@ async def test_upload_then_download_cycle(client, mock_auth, mock_db):
                 with patch("tsilo.api.registry.MetricsService") as mock_metrics_cls:
                     mock_metrics_cls.return_value = AsyncMock()
 
-                    dl_response = await client.get(f"/v1/modules/{ns}/{name}/{provider}/{version}/download")
+                    dl_response = await client.get(
+                        f"/v1/modules/{ns}/{name}/{provider}/{version}/download"
+                    )
                     assert dl_response.status_code == 204
                     assert dl_response.headers["x-terraform-get"] == download_url
 

@@ -122,7 +122,9 @@ class VersionService:
         )
         return versions
 
-    async def get_version(self, namespace: str, name: str, provider: str, version: str) -> dict | None:
+    async def get_version(
+        self, namespace: str, name: str, provider: str, version: str
+    ) -> dict | None:
         """Get a specific module version.
 
         Returns None if the module or version does not exist.
@@ -167,7 +169,9 @@ class VersionService:
         """Check if a version string is a valid semantic version."""
         return SEMVER_PATTERN.match(version) is not None
 
-    async def check_version_exists(self, namespace: str, name: str, provider: str, version: str) -> bool:
+    async def check_version_exists(
+        self, namespace: str, name: str, provider: str, version: str
+    ) -> bool:
         """Check if a specific module version already exists."""
         stmt = (
             select(ModuleVersion.id)
@@ -201,7 +205,8 @@ class VersionService:
         # Validate semver
         if not self.validate_semver(version):
             raise ValueError(
-                f"Invalid semantic version format: '{version}'. " "Expected format: MAJOR.MINOR.PATCH (e.g., 1.0.0)"
+                f"Invalid semantic version format: '{version}'. "
+                "Expected format: MAJOR.MINOR.PATCH (e.g., 1.0.0)"
             )
 
         # Check file size
@@ -223,7 +228,9 @@ class VersionService:
 
         # Upload to S3
         storage = StorageService()
-        package_url = storage.upload_module(namespace, name, provider, version, file_data, checksum)
+        package_url = storage.upload_module(
+            namespace, name, provider, version, file_data, checksum
+        )
 
         # Create ModuleVersion record
         now = datetime.now(tz=timezone.utc)

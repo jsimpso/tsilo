@@ -28,7 +28,9 @@ def _make_user(groups: list[str] | None = None) -> CurrentUser:
 @pytest.fixture
 async def client():
     """Create an async test client."""
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False) as ac:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test", follow_redirects=False
+    ) as ac:
         yield ac
 
 

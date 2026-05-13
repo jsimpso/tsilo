@@ -16,7 +16,11 @@ class Module(Base, TimestampMixin):
     """Represents a Terraform module identified by namespace, name, and provider."""
 
     __tablename__ = "modules"
-    __table_args__ = (UniqueConstraint("namespace_id", "name", "provider", name="uq_module_namespace_name_provider"),)
+    __table_args__ = (
+        UniqueConstraint(
+            "namespace_id", "name", "provider", name="uq_module_namespace_name_provider"
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=generate_uuid)
     namespace_id: Mapped[uuid.UUID] = mapped_column(
