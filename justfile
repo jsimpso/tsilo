@@ -8,7 +8,7 @@ default:
 # Create venv and install all dependencies (including dev tools)
 setup:
     uv venv
-    uv sync --all-groups
+    uv sync --all-extras
 
 # Run the development server
 serve *ARGS:
