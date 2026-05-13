@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <title>Upload Module - Tsilo</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav-container">
+            <a href="/" class="nav-logo">Tsilo</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Modules</a>
+                <a href="/upload" class="nav-link nav-link-active">Upload</a>
+            </div>
+            <div class="nav-auth" id="nav-auth">
+                <a href="/auth/login" class="btn btn-primary btn-sm">Sign In</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="upload-section">
+            <h1>Upload Module</h1>
+            <p class="upload-subtitle">Publish a new module version to the registry.</p>
+
+            <form id="upload-form" class="upload-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="namespace" class="form-label">Namespace</label>
+                    <select id="namespace" name="namespace" class="select-input" required>
+                        <option value="">Select a namespace...</option>
+                    </select>
+                    <span class="form-help">The namespace you have write access to.</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="module-name" class="form-label">Module Name</label>
+                        <input
+                            type="text"
+                            id="module-name"
+                            name="name"
+                            class="text-input"
+                            placeholder="e.g., vpc"
+                            pattern="^[a-z0-9][a-z0-9-]{0,98}[a-z0-9]$"
+                            required
+                            autocomplete="off"
+                        >
+                        <span class="form-help">Lowercase alphanumeric with hyphens (e.g., "vpc", "eks-cluster").</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="provider" class="form-label">Provider</label>
+                        <input
+                            type="text"
+                            id="provider"
+                            name="provider"
+                            class="text-input"
+                            placeholder="e.g., aws"
+                            pattern="^[a-z0-9-]+$"
+                            required
+                            autocomplete="off"
+                        >
+                        <span class="form-help">Provider name (e.g., "aws", "gcp", "azure").</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="version" class="form-label">Version</label>
+                    <input
+                        type="text"
+                        id="version"
+                        name="version"
+                        class="text-input"
+                        placeholder="e.g., 1.0.0"
+                        pattern="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$"
+                        required
+                        autocomplete="off"
+                    >
+                    <span class="form-help">Semantic version: MAJOR.MINOR.PATCH (e.g., "1.0.0").</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="module-file" class="form-label">Module Package</label>
+                    <div class="file-upload-area" id="file-upload-area">
+                        <input
+                            type="file"
+                            id="module-file"
+                            name="file"
+                            accept=".tar.gz,.tgz"
+                            required
+                            class="file-input"
+                        >
+                        <div class="file-upload-content">
+                            <span class="file-upload-icon" aria-hidden="true">&#x1F4E6;</span>
+                            <p class="file-upload-text">
+                                <strong>Choose a file</strong> or drag it here
+                            </p>
+                            <p class="file-upload-hint">
+                                .tar.gz archive containing Terraform module files (max 100 MB)
+                            </p>
+                        </div>
+                        <div class="file-selected" id="file-selected" hidden>
+                            <span class="file-name" id="file-name"></span>
+                            <span class="file-size" id="file-size"></span>
+                            <button type="button" class="btn btn-link btn-sm" id="file-clear">Remove</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="upload-btn">
+                        Upload Module
+                    </button>
+                </div>
+
+                <div class="upload-progress" id="upload-progress" hidden>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <p class="progress-text" id="progress-text">Uploading...</p>
+                </div>
+
+                <div class="upload-result" id="upload-result" hidden></div>
+            </form>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 Tsilo &mdash; Private Terraform Module Registry</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/upload.js"></script>
+</body>
+</html>

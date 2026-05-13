@@ -206,3 +206,9 @@ async def homepage():
 async def module_detail_page(namespace: str, name: str, provider: str, version: str | None = None):
     """Serve the module detail SPA page (client-side routing)."""
     return FileResponse(STATIC_DIR / "module-detail.html", media_type="text/html")
+
+
+@app.get("/upload", include_in_schema=False)
+async def upload_page():
+    """Serve the module upload page."""
+    return FileResponse(STATIC_DIR / "upload.html", media_type="text/html")
