@@ -245,21 +245,21 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T113 [P] Create comprehensive README.md: project overview, features, architecture diagram, deployment guide, development setup
-- [ ] T114 [P] Create quickstart documentation validation: follow quickstart.md steps, verify all commands work
-- [ ] T115 [P] Add comprehensive unit tests in tests/unit/: test_models.py (validation, relationships), test_services.py (business logic), test_schemas.py (Pydantic validation)
-- [ ] T116 Performance optimization: add database query optimization (select only needed columns, eager loading), implement caching for module metadata (5 min), permissions (1 min)
-- [ ] T117 Security audit: verify input validation on all endpoints, test rate limiting enforcement, verify HTTPS/TLS in production, check for SQL injection vulnerabilities
-- [ ] T118 [P] Implement charm lifecycle hooks in charm/src/charm.py: install, config-changed (update env vars), upgrade, scale (horizontal scaling support)
-- [ ] T119 [P] Add database relation in charm: integrate with PostgreSQL charm, handle connection string injection
-- [ ] T120 [P] Add S3 relation in charm: integrate with S3 charm or external S3, handle credentials injection
-- [ ] T121 Add graceful shutdown handling in src/tsilo/main.py: SIGTERM handler, drain connections, complete in-flight requests
-- [ ] T122 Add circuit breakers for external dependencies: OIDC provider, S3 storage (fail gracefully, return 503 with retry-after)
-- [ ] T123 Create data seeding script for development: sample namespaces, modules, versions, users, permissions
-- [ ] T124 Run full contract test suite against Terraform CLI: verify all protocol endpoints work with real Terraform 1.5+
-- [ ] T125 Verify WCAG 2.1 AA compliance for web UI: keyboard navigation, screen reader support, color contrast, focus indicators
-- [ ] T126 Add API documentation: generate OpenAPI spec from FastAPI, serve at /docs with authentication examples
-- [ ] T127 Final constitution compliance review: verify all 12-factor principles implemented, checklist in plan.md passes
+- [x] T113 [P] Create comprehensive README.md: project overview, features, architecture diagram, deployment guide, development setup
+- [x] T114 [P] Create quickstart documentation validation: follow quickstart.md steps, verify all commands work
+- [x] T115 [P] Add comprehensive unit tests in tests/unit/: test_models.py (validation, relationships), test_services.py (business logic), test_schemas.py (Pydantic validation)
+- [x] T116 Performance optimization: add database query optimization (select only needed columns, eager loading), implement caching for module metadata (5 min), permissions (1 min)
+- [x] T117 Security audit: verify input validation on all endpoints, test rate limiting enforcement, verify HTTPS/TLS in production, check for SQL injection vulnerabilities
+- [x] T118 [P] Implement charm lifecycle hooks in charm/src/charm.py: install, config-changed (update env vars), upgrade, scale (horizontal scaling support)
+- [x] T119 [P] Add database relation in charm: integrate with PostgreSQL charm, handle connection string injection
+- [x] T120 [P] Add S3 relation in charm: integrate with S3 charm or external S3, handle credentials injection
+- [x] T121 Add graceful shutdown handling in src/tsilo/main.py: SIGTERM handler, drain connections, complete in-flight requests
+- [x] T122 Add circuit breakers for external dependencies: OIDC provider, S3 storage (fail gracefully, return 503 with retry-after)
+- [x] T123 Create data seeding script for development: sample namespaces, modules, versions, users, permissions
+- [x] T124 Run full contract test suite against Terraform CLI: verify all protocol endpoints work with real Terraform 1.5+
+- [x] T125 Verify WCAG 2.1 AA compliance for web UI: keyboard navigation, screen reader support, color contrast, focus indicators
+- [x] T126 Add API documentation: generate OpenAPI spec from FastAPI, serve at /docs with authentication examples
+- [x] T127 Final constitution compliance review: verify all 12-factor principles implemented, checklist in plan.md passes
 
 ---
 

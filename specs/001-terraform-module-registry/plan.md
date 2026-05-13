@@ -35,21 +35,21 @@ Reference: `.specify/memory/constitution.md`
 
 **Required Gates**:
 
-- [ ] **Codebase & Dependencies**: All dependencies explicitly declared in requirements files
-- [ ] **Configuration**: Environment variables used for all config (no hardcoded values)
-- [ ] **Code Quality**: Linting (ruff/black/prettier) and type checking (mypy) configured
-- [ ] **Test-First**: TDD workflow documented; tests written before implementation
-- [ ] **Stateless Design**: Application processes share no state; backing services identified
-- [ ] **Build/Release/Run**: Separate stages defined; semantic versioning planned
-- [ ] **Observability**: Structured logging planned; /health and /metrics endpoints specified
-- [ ] **Disposability**: Graceful shutdown handling (SIGTERM) and circuit breakers planned
-- [ ] **Port Binding**: Self-contained web server (no external server dependency)
-- [ ] **Concurrency**: Horizontal scaling approach documented; process model defined
-- [ ] **Admin Processes**: One-off admin tasks identified and environment parity ensured
-- [ ] **UX Consistency**: UI patterns, responsive design, WCAG 2.1 AA compliance, error handling documented
-- [ ] **Security**: OIDC authentication, input validation, rate limiting, HTTPS/TLS planned
-- [ ] **Performance**: API latency (<200ms p95), DB query performance (<50ms), caching strategy defined
-- [ ] **Workflow**: CI/CD pipeline, code review process, branch protection, test coverage (≥80%) planned
+- [x] **Codebase & Dependencies**: All dependencies explicitly declared in requirements files
+- [x] **Configuration**: Environment variables used for all config (no hardcoded values)
+- [x] **Code Quality**: Linting (ruff/black/prettier) and type checking (mypy) configured
+- [x] **Test-First**: TDD workflow documented; tests written before implementation
+- [x] **Stateless Design**: Application processes share no state; backing services identified
+- [x] **Build/Release/Run**: Separate stages defined; semantic versioning planned
+- [x] **Observability**: Structured logging planned; /health and /metrics endpoints specified
+- [x] **Disposability**: Graceful shutdown handling (SIGTERM) and circuit breakers planned
+- [x] **Port Binding**: Self-contained web server (no external server dependency)
+- [x] **Concurrency**: Horizontal scaling approach documented; process model defined
+- [x] **Admin Processes**: One-off admin tasks identified and environment parity ensured
+- [x] **UX Consistency**: UI patterns, responsive design, WCAG 2.1 AA compliance, error handling documented
+- [x] **Security**: OIDC authentication, input validation, rate limiting, HTTPS/TLS planned
+- [x] **Performance**: API latency (<200ms p95), DB query performance (<50ms), caching strategy defined
+- [x] **Workflow**: CI/CD pipeline, code review process, branch protection, test coverage (≥80%) planned
 
 **Complexity Tracking**: Document any principle violations in the Complexity Tracking table below
 

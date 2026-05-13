@@ -45,7 +45,10 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_tags=[
-        {"name": "registry", "description": "Terraform Registry Protocol v1 endpoints (service discovery, versions, download, upload)."},
+        {
+            "name": "registry",
+            "description": "Terraform Registry Protocol v1 endpoints (service discovery, versions, download, upload).",
+        },
         {"name": "modules", "description": "Web UI module browsing API."},
         {"name": "namespaces", "description": "Namespace management (create, list, permissions)."},
         {"name": "tokens", "description": "API token management (create, list, revoke)."},
