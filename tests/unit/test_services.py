@@ -10,7 +10,6 @@ from tsilo.services.cache import TTLCache
 from tsilo.services.module_parser import ModuleParser, ParseError
 from tsilo.services.version_service import VersionService, _semver_compare
 
-
 # ── TTL Cache ────────────────────────────────────────────────────────────────
 
 
@@ -63,6 +62,7 @@ class TestTTLCache:
         cache = TTLCache(default_ttl=60.0)
         cache.set("perm", False)
         assert cache.get("perm") is False
+
 
 # ── Semver Comparison ────────────────────────────────────────────────────────
 

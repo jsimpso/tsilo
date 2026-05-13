@@ -199,13 +199,20 @@ async def prometheus_metrics(
 
 @router.post("/admin/cleanup-oauth-codes")
 async def cleanup_oauth_codes(
+    current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Delete expired and used OAuth authorization codes.
 
     Removes codes expired >24h ago and used codes older than 7 days.
-    Intended to be called hourly by a cron job or scheduler.
+    Admin only. Intended to be called hourly by a cron job or scheduler.
     """
+    if not _is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+
     from tsilo.services.oauth_service import OAuthService
 
     oauth_service = OAuthService(db)
@@ -215,13 +222,20 @@ async def cleanup_oauth_codes(
 
 @router.post("/admin/calculate-metrics")
 async def calculate_metrics(
+    current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
     """Aggregate download counts and identify deprecated versions.
 
-    Intended to be called hourly by a cron job or scheduler.
+    Admin only. Intended to be called hourly by a cron job or scheduler.
     Returns summary of deprecated versions found.
     """
+    if not _is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+
     metrics_service = MetricsService(db)
     deprecated = await metrics_service.flag_deprecated_versions()
 
