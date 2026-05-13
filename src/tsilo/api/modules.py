@@ -54,11 +54,11 @@ async def list_modules(
     return ModuleListResponse(**result)
 
 
-@router.get("/{namespace}/{name}/{provider}", response_model=ModuleDetailResponse)
+@router.get("/{namespace}/{name}/{system}", response_model=ModuleDetailResponse)
 async def get_module_detail(
     namespace: str,
     name: str,
-    provider: str,
+    system: str,
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ModuleDetailResponse:
@@ -74,12 +74,12 @@ async def get_module_detail(
         )
 
     module_service = ModuleService(db)
-    result = await module_service.get_module_with_versions(namespace, name, provider)
+    result = await module_service.get_module_with_versions(namespace, name, system)
 
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Module '{namespace}/{name}/{provider}' not found",
+            detail=f"Module '{namespace}/{name}/{system}' not found",
         )
 
     logger.info(
@@ -87,20 +87,20 @@ async def get_module_detail(
         user_id=str(current_user.id),
         namespace=namespace,
         module=name,
-        provider=provider,
+        system=system,
     )
 
     return ModuleDetailResponse(module=result)
 
 
 @router.get(
-    "/{namespace}/{name}/{provider}/{version}",
+    "/{namespace}/{name}/{system}/{version}",
     response_model=VersionDetailResponse,
 )
 async def get_version_detail(
     namespace: str,
     name: str,
-    provider: str,
+    system: str,
     version: str,
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -117,12 +117,12 @@ async def get_version_detail(
         )
 
     module_service = ModuleService(db)
-    result = await module_service.get_version_detail(namespace, name, provider, version)
+    result = await module_service.get_version_detail(namespace, name, system, version)
 
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Version '{version}' of module '{namespace}/{name}/{provider}' not found",
+            detail=f"Version '{version}' of module '{namespace}/{name}/{system}' not found",
         )
 
     logger.info(
@@ -130,7 +130,7 @@ async def get_version_detail(
         user_id=str(current_user.id),
         namespace=namespace,
         module=name,
-        provider=provider,
+        system=system,
         version=version,
     )
 

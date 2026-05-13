@@ -12,7 +12,7 @@
 │              │       │                 │       │                  │
 │ - name       │  1:N  │ - namespace_id  │  1:N  │ - module_id      │
 │              │       │ - name          │       │ - version        │
-│              │       │ - provider      │       │ - inputs         │
+│              │       │ - system        │       │ - inputs         │
 └──────┬───────┘       └─────────────────┘       │ - outputs        │
        │                                          │ - readme         │
        │                                          │ - package_url    │
@@ -93,7 +93,7 @@ Logical container for modules representing teams, projects, or organizational un
 
 ### Module
 
-Represents a Terraform module identified by namespace, name, and provider.
+Represents a Terraform module identified by namespace, name, and system (the "target system" segment per the Terraform Module Registry Protocol — commonly a provider name like "aws" or "azurerm", but any organizational keyword is permitted by the protocol).
 
 **Fields**:
 | Field | Type | Constraints | Description |
@@ -101,21 +101,21 @@ Represents a Terraform module identified by namespace, name, and provider.
 | id | UUID | PRIMARY KEY | Unique identifier |
 | namespace_id | UUID | FOREIGN KEY(Namespace.id), NOT NULL | Parent namespace |
 | name | VARCHAR(100) | NOT NULL | Module name (e.g., "vpc") |
-| provider | VARCHAR(50) | NOT NULL | Provider name (e.g., "aws", "gcp") |
+| system | VARCHAR(50) | NOT NULL | Target system name (e.g., "aws", "gcp") |
 | description | TEXT | NULL | Module description |
 | source_url | VARCHAR(500) | NULL | Source repository URL |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT NOW() | Creation timestamp |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT NOW() | Last update timestamp |
 
 **Validation Rules**:
-- Combination of (namespace_id, name, provider) must be unique
+- Combination of (namespace_id, name, system) must be unique
 - name must match pattern: `^[a-z0-9][a-z0-9-]{0,98}[a-z0-9]$`
-- provider must match pattern: `^[a-z0-9-]+$`
-- name and provider are immutable after creation
+- system must match pattern: `^[a-z0-9-]+$`
+- name and system are immutable after creation
 
 **Indexes**:
 - PRIMARY KEY on `id`
-- UNIQUE INDEX on `(namespace_id, name, provider)`
+- UNIQUE INDEX on `(namespace_id, name, system)`
 - INDEX on `namespace_id` for filtering by namespace
 - INDEX on `name` for search queries
 
@@ -125,7 +125,7 @@ Represents a Terraform module identified by namespace, name, and provider.
   "id": "660e8400-e29b-41d4-a716-446655440000",
   "namespace_id": "550e8400-e29b-41d4-a716-446655440000",
   "name": "vpc",
-  "provider": "aws",
+  "system": "aws",
   "description": "AWS VPC module with public/private subnets",
   "source_url": "https://github.com/org/terraform-aws-vpc",
   "created_at": "2026-05-10T10:30:00Z",
@@ -564,14 +564,14 @@ def upgrade():
         sa.Column('id', sa.UUID(), nullable=False),
         sa.Column('namespace_id', sa.UUID(), nullable=False),
         sa.Column('name', sa.String(100), nullable=False),
-        sa.Column('provider', sa.String(50), nullable=False),
+        sa.Column('system', sa.String(50), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
         sa.Column('source_url', sa.String(500), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(['namespace_id'], ['namespaces.id']),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('namespace_id', 'name', 'provider')
+        sa.UniqueConstraint('namespace_id', 'name', 'system')
     )
 
     # Create indexes
@@ -592,8 +592,8 @@ def downgrade():
 
 ### Constraints
 
-1. **Immutability**: namespace.name, module.name, module.provider, moduleversion.version cannot be updated
-2. **Uniqueness**: (namespace.name), (namespace_id, module.name, module.provider), (module_id, version)
+1. **Immutability**: namespace.name, module.name, module.system, moduleversion.version cannot be updated
+2. **Uniqueness**: (namespace.name), (namespace_id, module.name, module.system), (module_id, version)
 3. **Referential Integrity**: All foreign keys with appropriate cascade rules
 4. **Version Format**: Semantic versioning regex validation
 5. **Naming Patterns**: Lowercase alphanumeric with hyphens only

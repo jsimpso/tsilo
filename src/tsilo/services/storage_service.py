@@ -23,15 +23,15 @@ class StorageService:
             config=BotoConfig(signature_version="s3v4"),
         )
 
-    def _build_key(self, namespace: str, name: str, provider: str, version: str) -> str:
+    def _build_key(self, namespace: str, name: str, system: str, version: str) -> str:
         """Build S3 object key for a module package."""
-        return f"{namespace}/{name}/{provider}/{version}/module.tar.gz"
+        return f"{namespace}/{name}/{system}/{version}/module.tar.gz"
 
     def upload_module(
         self,
         namespace: str,
         name: str,
-        provider: str,
+        system: str,
         version: str,
         file_data: bytes,
         checksum_sha256: str,
@@ -48,7 +48,7 @@ class StorageService:
                 headers={"Retry-After": str(s3_breaker.retry_after)},
             )
 
-        key = self._build_key(namespace, name, provider, version)
+        key = self._build_key(namespace, name, system, version)
         try:
             self._client.put_object(
                 Bucket=self._bucket,
@@ -68,7 +68,7 @@ class StorageService:
         self,
         namespace: str,
         name: str,
-        provider: str,
+        system: str,
         version: str,
         expires_in: int = 300,
     ) -> str:
@@ -89,7 +89,7 @@ class StorageService:
                 headers={"Retry-After": str(s3_breaker.retry_after)},
             )
 
-        key = self._build_key(namespace, name, provider, version)
+        key = self._build_key(namespace, name, system, version)
         try:
             url: str = self._client.generate_presigned_url(
                 "get_object",

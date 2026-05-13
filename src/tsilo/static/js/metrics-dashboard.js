@@ -64,13 +64,13 @@
             var href = '/modules/' +
                 encodeURIComponent(mod.namespace) + '/' +
                 encodeURIComponent(mod.name) + '/' +
-                encodeURIComponent(mod.provider);
+                encodeURIComponent(mod.system);
             html +=
                 '<tr>' +
                 '<td><a href="' + href + '">' +
                 escapeHtml(mod.namespace) + '/' + escapeHtml(mod.name) +
                 '</a></td>' +
-                '<td>' + escapeHtml(mod.provider) + '</td>' +
+                '<td>' + escapeHtml(mod.system) + '</td>' +
                 '<td>' + formatNumber(mod.downloads) + '</td>' +
                 '</tr>';
         }

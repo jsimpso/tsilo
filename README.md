@@ -123,9 +123,9 @@ All configuration is via environment variables (12-factor). Key settings:
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/.well-known/terraform.json` | Service discovery |
-| `GET` | `/v1/modules/:ns/:name/:provider/versions` | List versions |
-| `GET` | `/v1/modules/:ns/:name/:provider/:version/download` | Download module |
-| `POST` | `/v1/modules/:ns/:name/:provider/:version` | Upload module |
+| `GET` | `/v1/modules/:ns/:name/:system/versions` | List versions |
+| `GET` | `/v1/modules/:ns/:name/:system/:version/download` | Download module |
+| `POST` | `/v1/modules/:ns/:name/:system/:version` | Upload module |
 
 ### Authentication
 

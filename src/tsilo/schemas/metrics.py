@@ -10,7 +10,7 @@ class TopModule(BaseModel):
 
     namespace: str
     name: str
-    provider: str
+    system: str
     downloads: int
 
 
@@ -71,11 +71,11 @@ class ModuleIdentifier(BaseModel):
 
     namespace: str
     name: str
-    provider: str
+    system: str
 
 
 class ModuleMetricsResponse(BaseModel):
-    """Response for GET /api/metrics/modules/:namespace/:name/:provider."""
+    """Response for GET /api/metrics/modules/:namespace/:name/:system."""
 
     module: ModuleIdentifier
     metrics: ModuleMetricsData

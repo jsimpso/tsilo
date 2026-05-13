@@ -35,14 +35,14 @@
     }
 
     function parsePathSegments() {
-        // URL format: /modules/:namespace/:name/:provider[/:version]
+        // URL format: /modules/:namespace/:name/:system[/:version]
         var parts = window.location.pathname.split('/').filter(Boolean);
-        // parts[0] = 'modules', parts[1] = ns, parts[2] = name, parts[3] = provider, parts[4]? = version
+        // parts[0] = 'modules', parts[1] = ns, parts[2] = name, parts[3] = system, parts[4]? = version
         if (parts.length < 4) return null;
         return {
             namespace: decodeURIComponent(parts[1]),
             name: decodeURIComponent(parts[2]),
-            provider: decodeURIComponent(parts[3]),
+            system: decodeURIComponent(parts[3]),
             version: parts[4] ? decodeURIComponent(parts[4]) : null,
         };
     }
@@ -166,7 +166,7 @@
             var href = '/modules/' +
                 encodeURIComponent(segments.namespace) + '/' +
                 encodeURIComponent(segments.name) + '/' +
-                encodeURIComponent(segments.provider) + '/' +
+                encodeURIComponent(segments.system) + '/' +
                 encodeURIComponent(ver.version);
             var rowClass = ver.version === currentVersion ? ' class="active-row"' : '';
             html += '<tr' + rowClass + '>' +
@@ -192,10 +192,10 @@
             '    <span class="breadcrumb-sep">/</span>' +
             '    <span>' + escapeHtml(segments.name) + '</span>' +
             '    <span class="breadcrumb-sep">/</span>' +
-            '    <span>' + escapeHtml(segments.provider) + '</span>' +
+            '    <span>' + escapeHtml(segments.system) + '</span>' +
             '  </nav>' +
             '  <h1>' + escapeHtml(segments.namespace) + ' / ' + escapeHtml(segments.name) +
-            '    <span class="badge">' + escapeHtml(segments.provider) + '</span>' +
+            '    <span class="badge">' + escapeHtml(segments.system) + '</span>' +
             '  </h1>' +
             (mod.description ? '<p class="module-header-desc">' + escapeHtml(mod.description) + '</p>' : '') +
             '  <div class="module-stats">' +
@@ -211,7 +211,7 @@
             var modResp = await fetch(
                 API_BASE + '/' + encodeURIComponent(segments.namespace) +
                 '/' + encodeURIComponent(segments.name) +
-                '/' + encodeURIComponent(segments.provider)
+                '/' + encodeURIComponent(segments.system)
             );
 
             if (modResp.status === 401) {
@@ -245,7 +245,7 @@
                 var verResp = await fetch(
                     API_BASE + '/' + encodeURIComponent(segments.namespace) +
                     '/' + encodeURIComponent(segments.name) +
-                    '/' + encodeURIComponent(segments.provider) +
+                    '/' + encodeURIComponent(segments.system) +
                     '/' + encodeURIComponent(targetVersion)
                 );
                 if (verResp.ok) {
@@ -342,7 +342,7 @@
             var newPath = '/modules/' +
                 encodeURIComponent(segments.namespace) + '/' +
                 encodeURIComponent(segments.name) + '/' +
-                encodeURIComponent(segments.provider) + '/' +
+                encodeURIComponent(segments.system) + '/' +
                 encodeURIComponent(newVersion);
             window.location.href = newPath;
         });

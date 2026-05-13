@@ -19,28 +19,28 @@ async def client():
 
 @pytest.mark.asyncio
 async def test_module_detail_requires_auth(client):
-    """GET /api/modules/:ns/:name/:provider should require authentication."""
+    """GET /api/modules/:ns/:name/:system should require authentication."""
     response = await client.get("/api/modules/platform-team/vpc/aws")
     assert response.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_module_detail_endpoint_exists(client):
-    """GET /api/modules/:ns/:name/:provider should not return 404 method-not-allowed."""
+    """GET /api/modules/:ns/:name/:system should not return 404 method-not-allowed."""
     response = await client.get("/api/modules/platform-team/vpc/aws")
     assert response.status_code != 405
 
 
 @pytest.mark.asyncio
 async def test_version_detail_requires_auth(client):
-    """GET /api/modules/:ns/:name/:provider/:version should require auth."""
+    """GET /api/modules/:ns/:name/:system/:version should require auth."""
     response = await client.get("/api/modules/platform-team/vpc/aws/1.0.0")
     assert response.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_version_detail_endpoint_exists(client):
-    """GET /api/modules/:ns/:name/:provider/:version should not return 405."""
+    """GET /api/modules/:ns/:name/:system/:version should not return 405."""
     response = await client.get("/api/modules/platform-team/vpc/aws/1.0.0")
     assert response.status_code != 405
 

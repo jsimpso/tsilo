@@ -12,7 +12,7 @@
     const form = document.getElementById('upload-form');
     const namespaceSelect = document.getElementById('namespace');
     const moduleNameInput = document.getElementById('module-name');
-    const providerInput = document.getElementById('provider');
+    const systemInput = document.getElementById('system');
     const versionInput = document.getElementById('version');
     const fileInput = document.getElementById('module-file');
     const fileUploadArea = document.getElementById('file-upload-area');
@@ -175,9 +175,9 @@
 
         var ns = namespaceSelect.value;
         var name = moduleNameInput.value.trim();
-        var provider = providerInput.value.trim();
+        var system = systemInput.value.trim();
 
-        if (!ns || !name || !provider) {
+        if (!ns || !name || !system) {
             showResult(false, 'Please fill in all required fields.');
             return;
         }
@@ -189,7 +189,7 @@
 
         var url = '/v1/modules/' + encodeURIComponent(ns) + '/' +
             encodeURIComponent(name) + '/' +
-            encodeURIComponent(provider) + '/' +
+            encodeURIComponent(system) + '/' +
             encodeURIComponent(version);
 
         try {
@@ -227,10 +227,10 @@
 
             if (result.status === 201) {
                 var data = JSON.parse(result.response);
-                var moduleUrl = '/modules/' + escapeHtml(ns) + '/' + escapeHtml(name) + '/' + escapeHtml(provider);
+                var moduleUrl = '/modules/' + escapeHtml(ns) + '/' + escapeHtml(name) + '/' + escapeHtml(system);
                 showResult(true,
                     '<strong>Module uploaded successfully!</strong><br>' +
-                    '<code>' + escapeHtml(ns) + '/' + escapeHtml(name) + '/' + escapeHtml(provider) +
+                    '<code>' + escapeHtml(ns) + '/' + escapeHtml(name) + '/' + escapeHtml(system) +
                     ' v' + escapeHtml(data.version) + '</code><br>' +
                     '<a href="' + moduleUrl + '">View module &rarr;</a>'
                 );

@@ -150,7 +150,7 @@ Cookie: session=eyJhbGc...
       "id": "660e8400-e29b-41d4-a716-446655440000",
       "namespace": "platform-team",
       "name": "vpc",
-      "provider": "aws",
+      "system": "aws",
       "description": "AWS VPC module with public/private subnets",
       "latest_version": "1.2.3",
       "version_count": 5,
@@ -161,7 +161,7 @@ Cookie: session=eyJhbGc...
       "id": "cc0e8400-e29b-41d4-a716-446655440000",
       "namespace": "network-team",
       "name": "vpc-peering",
-      "provider": "aws",
+      "system": "aws",
       "description": "VPC peering connection module",
       "latest_version": "2.1.0",
       "version_count": 8,
@@ -185,7 +185,7 @@ Cookie: session=eyJhbGc...
 
 ---
 
-### GET /api/modules/:namespace/:name/:provider
+### GET /api/modules/:namespace/:name/:system
 
 **Purpose**: Get detailed module information
 
@@ -196,7 +196,7 @@ Cookie: session=eyJhbGc...
 **Path Parameters**:
 - `namespace`: Namespace identifier
 - `name`: Module name
-- `provider`: Provider name
+- `system`: Target system name
 
 **Request**:
 ```http
@@ -212,7 +212,7 @@ Cookie: session=eyJhbGc...
     "id": "660e8400-e29b-41d4-a716-446655440000",
     "namespace": "platform-team",
     "name": "vpc",
-    "provider": "aws",
+    "system": "aws",
     "description": "AWS VPC module with public/private subnets",
     "source_url": "https://github.com/org/terraform-aws-vpc",
     "created_at": "2026-05-01T10:00:00Z",
@@ -251,7 +251,7 @@ Cookie: session=eyJhbGc...
 
 ---
 
-### GET /api/modules/:namespace/:name/:provider/:version
+### GET /api/modules/:namespace/:name/:system/:version
 
 **Purpose**: Get specific version details including inputs, outputs, and README
 
@@ -262,7 +262,7 @@ Cookie: session=eyJhbGc...
 **Path Parameters**:
 - `namespace`: Namespace identifier
 - `name`: Module name
-- `provider`: Provider name
+- `system`: Target system name
 - `version`: Semantic version
 
 **Request**:
@@ -477,13 +477,13 @@ Cookie: session=eyJhbGc...
       {
         "namespace": "platform-team",
         "name": "vpc",
-        "provider": "aws",
+        "system": "aws",
         "downloads": 1247
       },
       {
         "namespace": "platform-team",
         "name": "eks-cluster",
-        "provider": "aws",
+        "system": "aws",
         "downloads": 876
       }
     ],
@@ -510,7 +510,7 @@ Cookie: session=eyJhbGc...
 
 ---
 
-### GET /api/metrics/modules/:namespace/:name/:provider
+### GET /api/metrics/modules/:namespace/:name/:system
 
 **Purpose**: Get detailed metrics for a specific module
 
@@ -531,7 +531,7 @@ Cookie: session=eyJhbGc...
   "module": {
     "namespace": "platform-team",
     "name": "vpc",
-    "provider": "aws"
+    "system": "aws"
   },
   "metrics": {
     "total_downloads": 1247,

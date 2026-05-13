@@ -45,7 +45,8 @@ app = FastAPI(
         {
             "name": "registry",
             "description": (
-                "Terraform Registry Protocol v1 endpoints" " (service discovery, versions, download, upload)."
+                "Terraform Registry Protocol v1 endpoints"
+                " (service discovery, versions, download, upload)."
             ),
         },
         {"name": "modules", "description": "Web UI module browsing API."},
@@ -212,7 +213,9 @@ _CSRF_METHODS = {"POST", "PUT", "DELETE", "PATCH"}
 
 
 @app.middleware("http")
-async def csrf_protection(request: Request, call_next: RequestResponseEndpoint) -> Response | JSONResponse:
+async def csrf_protection(
+    request: Request, call_next: RequestResponseEndpoint
+) -> Response | JSONResponse:
     """Validate X-CSRF-Token header for state-changing requests from web UI sessions.
 
     Bearer token authenticated requests are exempt (API/CI usage).
@@ -285,9 +288,11 @@ async def homepage() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html", media_type="text/html")
 
 
-@app.get("/modules/{namespace}/{name}/{provider}", include_in_schema=False)
-@app.get("/modules/{namespace}/{name}/{provider}/{version}", include_in_schema=False)
-async def module_detail_page(namespace: str, name: str, provider: str, version: str | None = None) -> FileResponse:
+@app.get("/modules/{namespace}/{name}/{system}", include_in_schema=False)
+@app.get("/modules/{namespace}/{name}/{system}/{version}", include_in_schema=False)
+async def module_detail_page(
+    namespace: str, name: str, system: str, version: str | None = None
+) -> FileResponse:
     """Serve the module detail SPA page (client-side routing)."""
     return FileResponse(STATIC_DIR / "module-detail.html", media_type="text/html")
 

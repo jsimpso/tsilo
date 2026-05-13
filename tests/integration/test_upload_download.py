@@ -85,15 +85,15 @@ def mock_db():
 async def test_upload_then_download_cycle(client, mock_auth, mock_db):
     """End-to-end test: upload a module, then download it via Terraform protocol.
 
-    1. Upload module via POST /v1/modules/:namespace/:name/:provider/:version
-    2. List versions via GET /v1/modules/:namespace/:name/:provider/versions
-    3. Download via GET /v1/modules/:namespace/:name/:provider/:version/download
+    1. Upload module via POST /v1/modules/:namespace/:name/:system/:version
+    2. List versions via GET /v1/modules/:namespace/:name/:system/versions
+    3. Download via GET /v1/modules/:namespace/:name/:system/:version/download
     """
     version_id = uuid.uuid4()
     module_id = uuid.uuid4()
     ns = "platform-team"
     name = "vpc"
-    provider = "aws"
+    system = "aws"
     version = "1.0.0"
 
     # Step 1: Upload module
@@ -111,13 +111,13 @@ async def test_upload_then_download_cycle(client, mock_auth, mock_db):
                 "module_id": module_id,
                 "namespace": ns,
                 "name": name,
-                "provider": provider,
+                "system": system,
                 "version": version,
                 "inputs": [
                     {"name": "name", "type": "string", "description": "The name", "required": True}
                 ],
                 "outputs": [{"name": "id", "description": "The ID"}],
-                "package_url": f"s3://tsilo-modules/{ns}/{name}/{provider}/{version}/module.tar.gz",
+                "package_url": f"s3://tsilo-modules/{ns}/{name}/{system}/{version}/module.tar.gz",
                 "package_size_bytes": 1024,
                 "checksum_sha256": "a" * 64,
                 "published_at": datetime.now(tz=UTC).isoformat(),
@@ -126,7 +126,7 @@ async def test_upload_then_download_cycle(client, mock_auth, mock_db):
 
             tar_data = _make_tar_gz()
             upload_response = await client.post(
-                f"/v1/modules/{ns}/{name}/{provider}/{version}",
+                f"/v1/modules/{ns}/{name}/{system}/{version}",
                 files={"file": ("module.tar.gz", tar_data, "application/gzip")},
             )
             assert upload_response.status_code == 201
@@ -145,7 +145,7 @@ async def test_upload_then_download_cycle(client, mock_auth, mock_db):
             mock_ver.list_versions.return_value = [version]
             mock_ver_cls.return_value = mock_ver
 
-            versions_response = await client.get(f"/v1/modules/{ns}/{name}/{provider}/versions")
+            versions_response = await client.get(f"/v1/modules/{ns}/{name}/{system}/versions")
             assert versions_response.status_code == 200
             versions_data = versions_response.json()
             available = [v["version"] for v in versions_data["modules"][0]["versions"]]
@@ -167,14 +167,16 @@ async def test_upload_then_download_cycle(client, mock_auth, mock_db):
             mock_ver_cls.return_value = mock_ver
 
             with patch("tsilo.api.registry.StorageService") as mock_storage_cls:
-                download_url = f"https://s3.example.com/{ns}/{name}/{provider}/{version}/module.tar.gz?signed=1"
+                download_url = (
+                    f"https://s3.example.com/{ns}/{name}/{system}/{version}/module.tar.gz?signed=1"
+                )
                 mock_storage_cls.return_value.generate_download_url.return_value = download_url
 
                 with patch("tsilo.api.registry.MetricsService") as mock_metrics_cls:
                     mock_metrics_cls.return_value = AsyncMock()
 
                     dl_response = await client.get(
-                        f"/v1/modules/{ns}/{name}/{provider}/{version}/download"
+                        f"/v1/modules/{ns}/{name}/{system}/{version}/download"
                     )
                     assert dl_response.status_code == 204
                     assert dl_response.headers["x-terraform-get"] == download_url
@@ -185,7 +187,7 @@ async def test_upload_duplicate_then_upload_new_version(client, mock_auth, mock_
     """Upload v1.0.0, attempt duplicate (409), then upload v1.1.0 successfully."""
     ns = "platform-team"
     name = "vpc"
-    provider = "aws"
+    system = "aws"
 
     with patch("tsilo.api.registry.PermissionService") as mock_perm_cls:
         mock_perm = AsyncMock()
@@ -200,7 +202,7 @@ async def test_upload_duplicate_then_upload_new_version(client, mock_auth, mock_
 
             tar_data = _make_tar_gz()
             dup_response = await client.post(
-                f"/v1/modules/{ns}/{name}/{provider}/1.0.0",
+                f"/v1/modules/{ns}/{name}/{system}/1.0.0",
                 files={"file": ("module.tar.gz", tar_data, "application/gzip")},
             )
             assert dup_response.status_code == 409
@@ -214,11 +216,11 @@ async def test_upload_duplicate_then_upload_new_version(client, mock_auth, mock_
                 "module_id": uuid.uuid4(),
                 "namespace": ns,
                 "name": name,
-                "provider": provider,
+                "system": system,
                 "version": "1.1.0",
                 "inputs": [],
                 "outputs": [],
-                "package_url": f"s3://tsilo-modules/{ns}/{name}/{provider}/1.1.0/module.tar.gz",
+                "package_url": f"s3://tsilo-modules/{ns}/{name}/{system}/1.1.0/module.tar.gz",
                 "package_size_bytes": 1024,
                 "checksum_sha256": "b" * 64,
                 "published_at": datetime.now(tz=UTC).isoformat(),
@@ -227,7 +229,7 @@ async def test_upload_duplicate_then_upload_new_version(client, mock_auth, mock_
 
             tar_data = _make_tar_gz()
             new_response = await client.post(
-                f"/v1/modules/{ns}/{name}/{provider}/1.1.0",
+                f"/v1/modules/{ns}/{name}/{system}/1.1.0",
                 files={"file": ("module.tar.gz", tar_data, "application/gzip")},
             )
             assert new_response.status_code == 201

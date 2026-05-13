@@ -23,7 +23,7 @@ class ModuleListItem(BaseModel):
     id: uuid.UUID
     namespace: str
     name: str
-    provider: str
+    system: str
     description: str | None = None
     latest_version: str | None = None
     version_count: int = 0
@@ -48,7 +48,7 @@ class ModuleListResponse(BaseModel):
 
 
 class ModuleDetailResponse(BaseModel):
-    """Response for GET /api/modules/:namespace/:name/:provider."""
+    """Response for GET /api/modules/:namespace/:name/:system."""
 
     module: "ModuleDetail"
 
@@ -59,7 +59,7 @@ class ModuleDetail(BaseModel):
     id: uuid.UUID
     namespace: str
     name: str
-    provider: str
+    system: str
     description: str | None = None
     source_url: str | None = None
     created_at: datetime
@@ -94,7 +94,7 @@ class PublisherInfo(BaseModel):
 
 
 class VersionDetailResponse(BaseModel):
-    """Response for GET /api/modules/:namespace/:name/:provider/:version."""
+    """Response for GET /api/modules/:namespace/:name/:system/:version."""
 
     version: "VersionDetail"
 

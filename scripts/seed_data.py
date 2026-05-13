@@ -84,7 +84,7 @@ MODULES = [
     {
         "namespace": "platform-team",
         "name": "vpc",
-        "provider": "aws",
+        "system": "aws",
         "description": "Creates a VPC with public and private subnets",
         "versions": [
             {
@@ -150,7 +150,7 @@ MODULES = [
     {
         "namespace": "platform-team",
         "name": "eks-cluster",
-        "provider": "aws",
+        "system": "aws",
         "description": "Managed Kubernetes cluster on AWS EKS",
         "versions": [
             {
@@ -183,7 +183,7 @@ MODULES = [
     {
         "namespace": "networking",
         "name": "cloudfront-cdn",
-        "provider": "aws",
+        "system": "aws",
         "description": "CloudFront CDN distribution with S3 origin",
         "versions": [
             {
@@ -216,7 +216,7 @@ MODULES = [
     {
         "namespace": "security",
         "name": "iam-role",
-        "provider": "aws",
+        "system": "aws",
         "description": "IAM role with configurable trust policy",
         "versions": [
             {
@@ -298,7 +298,7 @@ async def seed():
             module = Module(
                 namespace_id=ns.id,
                 name=mod_data["name"],
-                provider=mod_data["provider"],
+                system=mod_data["system"],
                 description=mod_data["description"],
             )
             session.add(module)
@@ -315,7 +315,7 @@ async def seed():
                     inputs=ver_data["inputs"],
                     outputs=ver_data["outputs"],
                     readme=ver_data["readme"],
-                    package_url=f"s3://tsilo-modules/{mod_data['namespace']}/{mod_data['name']}/{mod_data['provider']}/{ver_data['version']}/module.tar.gz",
+                    package_url=f"s3://tsilo-modules/{mod_data['namespace']}/{mod_data['name']}/{mod_data['system']}/{ver_data['version']}/module.tar.gz",
                     package_size_bytes=len(fake_package),
                     checksum_sha256=checksum,
                     published_by=publisher.id,

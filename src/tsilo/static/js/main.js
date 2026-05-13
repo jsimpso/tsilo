@@ -58,13 +58,13 @@
         const href = '/modules/' +
             encodeURIComponent(mod.namespace) + '/' +
             encodeURIComponent(mod.name) + '/' +
-            encodeURIComponent(mod.provider);
+            encodeURIComponent(mod.system);
 
         return (
             '<a href="' + href + '" class="module-card">' +
             '  <div class="module-card-header">' +
             '    <span class="module-namespace">' + escapeHtml(mod.namespace) + '</span>' +
-            '    <span class="module-provider badge">' + escapeHtml(mod.provider) + '</span>' +
+            '    <span class="module-system badge">' + escapeHtml(mod.system) + '</span>' +
             '  </div>' +
             '  <h3 class="module-name">' + escapeHtml(mod.name) + '</h3>' +
             '  <p class="module-description">' + escapeHtml(mod.description || 'No description') + '</p>' +

@@ -89,7 +89,7 @@ async def test_module_list_only_returns_authorized_namespaces(client):
 
 @pytest.mark.asyncio
 async def test_module_detail_unauthorized_namespace_returns_403(client):
-    """GET /api/modules/:ns/:name/:provider should return 403 for unauthorized namespace."""
+    """GET /api/modules/:ns/:name/:system should return 403 for unauthorized namespace."""
     # Without auth this returns 401; with auth for wrong namespace it should be 403
     response = await client.get("/api/modules/secret-team/vpc/aws")
     assert response.status_code == 401
@@ -100,7 +100,7 @@ async def test_module_detail_unauthorized_namespace_returns_403(client):
 
 @pytest.mark.asyncio
 async def test_download_unauthorized_namespace_returns_403(client):
-    """GET /v1/modules/:ns/:name/:provider/:version/download should deny unauthorized access."""
+    """GET /v1/modules/:ns/:name/:system/:version/download should deny unauthorized access."""
     response = await client.get("/v1/modules/secret-team/vpc/aws/1.0.0/download")
     assert response.status_code == 401
 
@@ -110,7 +110,7 @@ async def test_download_unauthorized_namespace_returns_403(client):
 
 @pytest.mark.asyncio
 async def test_upload_unauthorized_namespace_returns_403(client):
-    """POST /v1/modules/:ns/:name/:provider/:version should deny unauthorized upload."""
+    """POST /v1/modules/:ns/:name/:system/:version should deny unauthorized upload."""
     response = await client.post("/v1/modules/secret-team/vpc/aws/1.0.0")
     assert response.status_code in (401, 422)
 
@@ -120,7 +120,7 @@ async def test_upload_unauthorized_namespace_returns_403(client):
 
 @pytest.mark.asyncio
 async def test_version_list_unauthorized_namespace_returns_403(client):
-    """GET /v1/modules/:ns/:name/:provider/versions should deny unauthorized access."""
+    """GET /v1/modules/:ns/:name/:system/versions should deny unauthorized access."""
     response = await client.get("/v1/modules/secret-team/vpc/aws/versions")
     assert response.status_code == 401
 

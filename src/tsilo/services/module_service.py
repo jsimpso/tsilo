@@ -129,7 +129,7 @@ class ModuleService:
                     "id": mod.id,
                     "namespace": mod.namespace.name,
                     "name": mod.name,
-                    "provider": mod.provider,
+                    "system": mod.system,
                     "description": mod.description,
                     "latest_version": latest_version,
                     "version_count": version_count,
@@ -149,7 +149,7 @@ class ModuleService:
         }
 
     async def get_module_with_versions(
-        self, namespace: str, name: str, provider: str
+        self, namespace: str, name: str, system: str
     ) -> dict[str, Any] | None:
         """Get detailed module info with all versions.
 
@@ -161,7 +161,7 @@ class ModuleService:
             .where(
                 Namespace.name == namespace,
                 Module.name == name,
-                Module.provider == provider,
+                Module.system == system,
             )
             .options(
                 joinedload(Module.namespace),
@@ -218,7 +218,7 @@ class ModuleService:
             "id": module.id,
             "namespace": module.namespace.name,
             "name": module.name,
-            "provider": module.provider,
+            "system": module.system,
             "description": module.description,
             "source_url": module.source_url,
             "created_at": module.created_at,
@@ -228,7 +228,7 @@ class ModuleService:
         }
 
     async def get_version_detail(
-        self, namespace: str, name: str, provider: str, version: str
+        self, namespace: str, name: str, system: str, version: str
     ) -> dict[str, Any] | None:
         """Get detailed version info including inputs, outputs, and README.
 
@@ -241,7 +241,7 @@ class ModuleService:
             .where(
                 Namespace.name == namespace,
                 Module.name == name,
-                Module.provider == provider,
+                Module.system == system,
                 ModuleVersion.version == version,
             )
             .options(
@@ -273,13 +273,13 @@ class ModuleService:
         # Generate usage example
         ns_name = mv.module.namespace.name
         mod_name = mv.module.name
-        prov = mv.module.provider
+        sys_name = mv.module.system
         from tsilo.config import get_settings
 
         registry_host = get_settings().app_base_url.replace("https://", "").replace("http://", "")
         usage_example = (
             f'module "{mod_name}" {{\n'
-            f'  source  = "{registry_host}/{ns_name}/{mod_name}/{prov}"\n'
+            f'  source  = "{registry_host}/{ns_name}/{mod_name}/{sys_name}"\n'
             f'  version = "{mv.version}"\n'
             f"}}"
         )

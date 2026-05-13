@@ -17,7 +17,7 @@ As a DevOps engineer, I need to download Terraform modules from the private regi
 
 **Acceptance Scenarios**:
 
-1. **Given** a module exists in the registry at `namespace/module-name/provider`, **When** I run `terraform init` with source = `registry.example.com/namespace/module-name/provider`, **Then** Terraform downloads the module and I can use it in my configuration
+1. **Given** a module exists in the registry at `namespace/module-name/system`, **When** I run `terraform init` with source = `registry.example.com/namespace/module-name/system`, **Then** Terraform downloads the module and I can use it in my configuration
 2. **Given** multiple versions of a module exist (e.g., 1.0.0, 1.1.0, 2.0.0), **When** I specify version = "~> 1.0" in my Terraform code, **Then** the registry returns the latest compatible version (1.1.0)
 3. **Given** I reference a module that doesn't exist, **When** I run `terraform init`, **Then** I receive a clear error message indicating the module was not found
 4. **Given** I am authenticated to the registry, **When** I request a module from a namespace I have access to, **Then** the download succeeds
@@ -131,10 +131,10 @@ As a module author or platform administrator, I need to view download metrics fo
 
 **Registry API & Terraform CLI Compatibility**:
 
-- **FR-001**: System MUST implement the Terraform Module Registry Protocol as documented in docs/registry_api.md
+- **FR-001**: System MUST implement the Terraform Module Registry Protocol as documented in docs/module_registry_protocol.md (minimal protocol required by Terraform CLI) and the extended endpoints in docs/registry_api.md (HCP/Terraform Registry HTTP API superset)
 - **FR-002**: System MUST respond to module discovery requests (GET /.well-known/terraform.json) with service metadata
-- **FR-003**: System MUST respond to module version listing requests (GET /:namespace/:name/:provider/versions) with all available versions in descending order
-- **FR-004**: System MUST respond to module download requests (GET /:namespace/:name/:provider/:version/download) with a download URL or direct module package
+- **FR-003**: System MUST respond to module version listing requests (GET /:namespace/:name/:system/versions) with all available versions in descending order
+- **FR-004**: System MUST respond to module download requests (GET /:namespace/:name/:system/:version/download) with a download URL or direct module package
 - **FR-005**: System MUST accept and validate semantic version constraints from Terraform CLI (e.g., "~> 1.0", ">= 1.0.0, < 2.0.0")
 - **FR-006**: System MUST serve module packages in a format compatible with Terraform CLI (typically .tar.gz or .zip archives)
 
@@ -167,7 +167,7 @@ As a module author or platform administrator, I need to view download metrics fo
 **Multi-Tenancy & Namespaces**:
 
 - **FR-022**: System MUST organize modules into namespaces for logical separation between teams or projects
-- **FR-023**: System MUST enforce unique module identifiers within a namespace using the pattern: namespace/name/provider
+- **FR-023**: System MUST enforce unique module identifiers within a namespace using the pattern: namespace/name/system (where "system" is the target system per the Terraform Module Registry Protocol, e.g., "aws", "gcp")
 - **FR-024**: System MUST allow the same module name to exist in different namespaces
 - **FR-025**: System MUST prevent users from accessing modules in namespaces they are not authorized for
 
@@ -192,7 +192,7 @@ As a module author or platform administrator, I need to view download metrics fo
 
 ### Key Entities
 
-- **Module**: Represents a Terraform module identified by namespace, name, and provider (e.g., "platform/vpc/aws"). Contains metadata, documentation, and relationships to versions.
+- **Module**: Represents a Terraform module identified by namespace, name, and system (e.g., "platform/vpc/aws"). The "system" segment is the target system the module is written for (commonly matches a provider name like "aws" or "azurerm", but per the Terraform Module Registry Protocol it can be any organizational keyword). Contains metadata, documentation, and relationships to versions.
 
 - **ModuleVersion**: Represents a specific version of a module (e.g., "1.2.3"). Contains semantic version number, input variables, output values, documentation, package location, upload timestamp, and download metrics.
 
@@ -223,7 +223,7 @@ As a module author or platform administrator, I need to view download metrics fo
 
 ## Assumptions
 
-- Users have basic familiarity with Terraform and understand concepts like modules, versions, and providers
+- Users have basic familiarity with Terraform and understand concepts like modules, versions, and target systems (providers)
 - The OIDC provider is already configured and available for authentication
 - OIDC provider includes group membership in standard claims or via a userinfo endpoint
 - Module packages will be uploaded as standard Terraform module directory structures (with variables.tf, outputs.tf, main.tf, etc.)

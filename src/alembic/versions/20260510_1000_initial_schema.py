@@ -76,7 +76,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("namespace_id", sa.Uuid(), nullable=False),
         sa.Column("name", sa.String(100), nullable=False),
-        sa.Column("provider", sa.String(50), nullable=False),
+        sa.Column("system", sa.String(50), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("source_url", sa.String(500), nullable=True),
         sa.Column(
@@ -94,7 +94,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.ForeignKeyConstraint(["namespace_id"], ["namespaces.id"], ondelete="CASCADE"),
         sa.UniqueConstraint(
-            "namespace_id", "name", "provider", name="uq_module_namespace_name_provider"
+            "namespace_id", "name", "system", name="uq_module_namespace_name_system"
         ),
     )
     op.create_index("ix_modules_namespace_id", "modules", ["namespace_id"])

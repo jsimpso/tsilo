@@ -7,7 +7,7 @@ import pytest
 
 from tsilo.models.api_token import APIToken
 from tsilo.models.metric import DownloadMetric
-from tsilo.models.module import MODULE_NAME_PATTERN, PROVIDER_PATTERN, Module
+from tsilo.models.module import MODULE_NAME_PATTERN, SYSTEM_PATTERN, Module
 from tsilo.models.namespace import NAMESPACE_NAME_PATTERN, Namespace
 from tsilo.models.oauth_code import OAuthAuthorizationCode
 from tsilo.models.permission import NamespacePermission, PermissionLevel
@@ -72,41 +72,41 @@ class TestNamespaceValidation:
 class TestModuleValidation:
     def test_valid_module_name(self):
         ns_id = uuid.uuid4()
-        mod = Module(namespace_id=ns_id, name="my-vpc", provider="aws")
+        mod = Module(namespace_id=ns_id, name="my-vpc", system="aws")
         assert mod.name == "my-vpc"
 
     def test_invalid_module_name_uppercase(self):
         with pytest.raises(ValueError, match="Module name must be lowercase"):
-            Module(namespace_id=uuid.uuid4(), name="MyVpc", provider="aws")
+            Module(namespace_id=uuid.uuid4(), name="MyVpc", system="aws")
 
     def test_invalid_module_name_starts_with_hyphen(self):
         with pytest.raises(ValueError, match="Module name must be lowercase"):
-            Module(namespace_id=uuid.uuid4(), name="-vpc", provider="aws")
+            Module(namespace_id=uuid.uuid4(), name="-vpc", system="aws")
 
-    def test_valid_provider(self):
-        mod = Module(namespace_id=uuid.uuid4(), name="my-vpc", provider="aws")
-        assert mod.provider == "aws"
+    def test_valid_system(self):
+        mod = Module(namespace_id=uuid.uuid4(), name="my-vpc", system="aws")
+        assert mod.system == "aws"
 
-    def test_invalid_provider_uppercase(self):
-        with pytest.raises(ValueError, match="Provider must be lowercase"):
-            Module(namespace_id=uuid.uuid4(), name="my-vpc", provider="AWS")
+    def test_invalid_system_uppercase(self):
+        with pytest.raises(ValueError, match="System must be lowercase"):
+            Module(namespace_id=uuid.uuid4(), name="my-vpc", system="AWS")
 
-    def test_invalid_provider_special_chars(self):
-        with pytest.raises(ValueError, match="Provider must be lowercase"):
-            Module(namespace_id=uuid.uuid4(), name="my-vpc", provider="aws_gcp")
+    def test_invalid_system_special_chars(self):
+        with pytest.raises(ValueError, match="System must be lowercase"):
+            Module(namespace_id=uuid.uuid4(), name="my-vpc", system="aws_gcp")
 
     def test_module_repr(self):
-        mod = Module(namespace_id=uuid.uuid4(), name="my-vpc", provider="aws")
+        mod = Module(namespace_id=uuid.uuid4(), name="my-vpc", system="aws")
         assert "my-vpc" in repr(mod)
 
     def test_module_name_pattern_regex(self):
         assert MODULE_NAME_PATTERN.match("valid-name")
         assert not MODULE_NAME_PATTERN.match("_invalid")
 
-    def test_provider_pattern_regex(self):
-        assert PROVIDER_PATTERN.match("aws")
-        assert PROVIDER_PATTERN.match("google-cloud")
-        assert not PROVIDER_PATTERN.match("AWS")
+    def test_system_pattern_regex(self):
+        assert SYSTEM_PATTERN.match("aws")
+        assert SYSTEM_PATTERN.match("google-cloud")
+        assert not SYSTEM_PATTERN.match("AWS")
 
 
 # ── ModuleVersion Validation ─────────────────────────────────────────────────

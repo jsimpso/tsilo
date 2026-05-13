@@ -38,7 +38,7 @@
 - [x] T010 Setup SQLAlchemy base and session management in src/tsilo/models/__init__.py
 - [x] T011 Initialize Alembic for database migrations in src/alembic/: env.py, alembic.ini configuration
 - [x] T012 [P] Create Namespace model in src/tsilo/models/namespace.py: id, name, display_name, description, timestamps, validation
-- [x] T013 [P] Create Module model in src/tsilo/models/module.py: id, namespace_id, name, provider, description, source_url, timestamps
+- [x] T013 [P] Create Module model in src/tsilo/models/module.py: id, namespace_id, name, system, description, source_url, timestamps
 - [x] T014 [P] Create ModuleVersion model in src/tsilo/models/version.py: id, module_id, version, inputs, outputs, readme, package_url, checksums, published_by, published_at
 - [x] T015 [P] Create NamespacePermission model in src/tsilo/models/permission.py: id, namespace_id, group_name, permission_level (read/write)
 - [x] T016 [P] Create User model in src/tsilo/models/user.py: id, oidc_sub, email, name, groups (JSONB), last_login_at, timestamps
@@ -79,12 +79,12 @@
 
 - [x] T034 [P] [US1] Create Pydantic schemas for Terraform protocol in src/tsilo/schemas/terraform.py: VersionsResponse, DownloadResponse, ServiceDiscovery
 - [x] T035 [US1] Implement service discovery endpoint in src/tsilo/api/registry.py: GET /.well-known/terraform.json (no auth required, cacheable)
-- [x] T036 [US1] Implement version listing endpoint in src/tsilo/api/registry.py: GET /v1/modules/:namespace/:name/:provider/versions with permission check, semantic version sorting
+- [x] T036 [US1] Implement version listing endpoint in src/tsilo/api/registry.py: GET /v1/modules/:namespace/:name/:system/versions with permission check, semantic version sorting
 - [x] T037 [US1] Create module version service in src/tsilo/services/version_service.py: list_versions, get_version, semantic version comparison
-- [x] T038 [US1] Implement module download endpoint in src/tsilo/api/registry.py: GET /v1/modules/:namespace/:name/:provider/:version/download with pre-signed S3 URL generation
+- [x] T038 [US1] Implement module download endpoint in src/tsilo/api/registry.py: GET /v1/modules/:namespace/:name/:system/:version/download with pre-signed S3 URL generation
 - [x] T039 [US1] Create metrics service in src/tsilo/services/metrics_service.py: increment_download_count (async, non-blocking), update_last_download_at
 - [x] T040 [US1] Add error handling for 404 (module not found), 403 (no permission), 401 (not authenticated)
-- [x] T041 [US1] Add structured logging for all download events: user_id, namespace, module, provider, version, timestamp
+- [x] T041 [US1] Add structured logging for all download events: user_id, namespace, module, system, version, timestamp
 
 **Checkpoint**: Terraform CLI can successfully download modules via `terraform init`
 
@@ -109,8 +109,8 @@
 - [x] T047 [US2] Implement OIDC login endpoints in src/tsilo/api/auth.py: GET /auth/login (redirect to OIDC), GET /auth/callback (handle code, create session), POST /auth/logout, GET /auth/me
 - [x] T048 [US2] Implement module listing endpoint in src/tsilo/api/modules.py: GET /api/modules with search, namespace filter, pagination (only authorized namespaces)
 - [x] T049 [US2] Create module service in src/tsilo/services/module_service.py: list_modules, search_modules, get_module_with_versions, filter by user permissions
-- [x] T050 [US2] Implement module detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:provider with version list and metrics
-- [x] T051 [US2] Implement version detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:provider/:version with inputs, outputs, README
+- [x] T050 [US2] Implement module detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:system with version list and metrics
+- [x] T051 [US2] Implement version detail endpoint in src/tsilo/api/modules.py: GET /api/modules/:namespace/:name/:system/:version with inputs, outputs, README
 - [x] T052 [P] [US2] Create static homepage in src/tsilo/static/index.html: module search, featured modules, recent activity
 - [x] T053 [P] [US2] Create module list JavaScript in src/tsilo/static/js/main.js: fetch modules, render cards, search filtering, pagination
 - [x] T054 [P] [US2] Create module detail JavaScript in src/tsilo/static/js/module-detail.js: fetch version details, render README (Markdown), display inputs/outputs tables, version switcher
@@ -136,14 +136,14 @@
 ### Implementation for User Story 3
 
 - [x] T060 [P] [US3] Create Terraform module parser in src/tsilo/services/module_parser.py: extract inputs from variables.tf, extract outputs from outputs.tf, extract README.md
-- [x] T061 [US3] Implement module upload endpoint in src/tsilo/api/registry.py: POST /v1/modules/:namespace/:name/:provider/:version with multipart file upload
+- [x] T061 [US3] Implement module upload endpoint in src/tsilo/api/registry.py: POST /v1/modules/:namespace/:name/:system/:version with multipart file upload
 - [x] T062 [US3] Create module version service methods in src/tsilo/services/version_service.py: create_version, validate_semver, check_version_exists, parse_module_package
 - [x] T063 [US3] Implement package validation: verify .tar.gz format, check for .tf files, validate Terraform syntax, check size limit (100MB)
-- [x] T064 [US3] Integrate S3 upload: upload to s3://bucket/:namespace/:name/:provider/:version/module.tar.gz with server-side encryption
+- [x] T064 [US3] Integrate S3 upload: upload to s3://bucket/:namespace/:name/:system/:version/module.tar.gz with server-side encryption
 - [x] T065 [US3] Calculate and store SHA256 checksum during upload for package integrity
 - [x] T066 [US3] Create DownloadMetric record initialized to 0 when ModuleVersion created
 - [x] T067 [US3] Add detailed validation error responses: which file failed, what syntax error, actionable guidance
-- [x] T068 [P] [US3] Create module upload form in web UI: namespace selector, module name/provider input, version input, file upload, validation feedback
+- [x] T068 [P] [US3] Create module upload form in web UI: namespace selector, module name/system input, version input, file upload, validation feedback
 - [x] T069 [US3] Add module upload JavaScript in src/tsilo/static/js/upload.js: file validation, progress indicator, error display, success confirmation
 
 **Checkpoint**: Module authors can upload new modules and versions; modules immediately available for download
@@ -229,7 +229,7 @@
 - [x] T103 [P] [US6] Create Pydantic schemas for metrics in src/tsilo/schemas/metrics.py: MetricsOverview, ModuleMetrics, DownloadTrend
 - [x] T104 [US6] Enhance metrics service in src/tsilo/services/metrics_service.py: get_module_metrics, get_system_metrics, flag_deprecated_versions (90+ days no downloads)
 - [x] T105 [US6] Implement system metrics endpoint in src/tsilo/api/metrics.py: GET /api/metrics/overview (admin only) with total_modules, total_downloads, top_modules, namespace_usage
-- [x] T106 [US6] Implement module metrics endpoint in src/tsilo/api/metrics.py: GET /api/metrics/modules/:namespace/:name/:provider with downloads_by_version, downloads_over_time
+- [x] T106 [US6] Implement module metrics endpoint in src/tsilo/api/metrics.py: GET /api/metrics/modules/:namespace/:name/:system with downloads_by_version, downloads_over_time
 - [x] T107 [US6] Update module detail endpoint to include download metrics: total_downloads, last_download_at for each version
 - [x] T108 [US6] Add deprecation flag to version responses: mark versions with last_download_at > 90 days ago as deprecated
 - [x] T109 [US6] Create metrics calculation job: aggregate download counts, identify deprecated versions, update cache (runs hourly)

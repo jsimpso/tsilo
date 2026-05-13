@@ -73,7 +73,7 @@ class TestModuleListItem:
             id=uuid.uuid4(),
             namespace="team",
             name="vpc",
-            provider="aws",
+            system="aws",
         )
         assert item.description is None
         assert item.version_count == 0
@@ -85,7 +85,7 @@ class TestModuleListItem:
             id=uuid.uuid4(),
             namespace="team",
             name="vpc",
-            provider="aws",
+            system="aws",
             description="A VPC module",
             latest_version="2.0.0",
             version_count=5,
@@ -295,7 +295,7 @@ class TestMetricsOverviewData:
             downloads_last_30_days=200,
             active_users_last_30_days=15,
             top_modules=[
-                TopModule(namespace="team", name="vpc", provider="aws", downloads=500),
+                TopModule(namespace="team", name="vpc", system="aws", downloads=500),
             ],
             namespace_usage=[],
         )

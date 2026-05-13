@@ -39,11 +39,11 @@ async def service_discovery() -> Response:
     )
 
 
-@router.get("/v1/modules/{namespace}/{name}/{provider}/versions")
+@router.get("/v1/modules/{namespace}/{name}/{system}/versions")
 async def list_versions(
     namespace: str,
     name: str,
-    provider: str,
+    system: str,
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> Response:
@@ -59,7 +59,7 @@ async def list_versions(
             user_id=str(current_user.id),
             namespace=namespace,
             module=name,
-            provider=provider,
+            system=system,
             action="list_versions",
         )
         raise HTTPException(
@@ -69,19 +69,19 @@ async def list_versions(
 
     # Get versions
     version_service = VersionService(db)
-    versions = await version_service.list_versions(namespace, name, provider)
+    versions = await version_service.list_versions(namespace, name, system)
 
     if versions is None:
         logger.info(
             "module_not_found",
             namespace=namespace,
             module=name,
-            provider=provider,
+            system=system,
             action="list_versions",
         )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Module '{namespace}/{name}/{provider}' not found",
+            detail=f"Module '{namespace}/{name}/{system}' not found",
         )
 
     response_data = VersionsResponse(
@@ -95,11 +95,11 @@ async def list_versions(
     )
 
 
-@router.get("/v1/modules/{namespace}/{name}/{provider}/{version}/download")
+@router.get("/v1/modules/{namespace}/{name}/{system}/{version}/download")
 async def download_module(
     namespace: str,
     name: str,
-    provider: str,
+    system: str,
     version: str,
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -117,7 +117,7 @@ async def download_module(
             user_id=str(current_user.id),
             namespace=namespace,
             module=name,
-            provider=provider,
+            system=system,
             version=version,
             action="download",
         )
@@ -128,25 +128,25 @@ async def download_module(
 
     # Get version details
     version_service = VersionService(db)
-    version_info = await version_service.get_version(namespace, name, provider, version)
+    version_info = await version_service.get_version(namespace, name, system, version)
 
     if version_info is None:
         logger.info(
             "version_not_found",
             namespace=namespace,
             module=name,
-            provider=provider,
+            system=system,
             version=version,
             action="download",
         )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Version '{version}' of module '{namespace}/{name}/{provider}' not found",
+            detail=f"Version '{version}' of module '{namespace}/{name}/{system}' not found",
         )
 
     # Generate pre-signed download URL
     storage = StorageService()
-    download_url = storage.generate_download_url(namespace, name, provider, version)
+    download_url = storage.generate_download_url(namespace, name, system, version)
 
     # Increment download counter (non-blocking)
     metrics_service = MetricsService(db)
@@ -158,7 +158,7 @@ async def download_module(
         user_email=current_user.email,
         namespace=namespace,
         module=name,
-        provider=provider,
+        system=system,
         version=version,
     )
 
@@ -171,11 +171,11 @@ async def download_module(
     )
 
 
-@router.post("/v1/modules/{namespace}/{name}/{provider}/{version}", status_code=201)
+@router.post("/v1/modules/{namespace}/{name}/{system}/{version}", status_code=201)
 async def upload_module(
     namespace: str,
     name: str,
-    provider: str,
+    system: str,
     version: str,
     file: UploadFile,
     current_user: CurrentUser = Depends(get_current_user),
@@ -195,7 +195,7 @@ async def upload_module(
             user_id=str(current_user.id),
             namespace=namespace,
             module=name,
-            provider=provider,
+            system=system,
             version=version,
             action="upload",
         )
@@ -216,10 +216,10 @@ async def upload_module(
 
     # Check for duplicate version
     version_service = VersionService(db)
-    if await version_service.check_version_exists(namespace, name, provider, version):
+    if await version_service.check_version_exists(namespace, name, system, version):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Version '{version}' of module '{namespace}/{name}/{provider}' already exists",
+            detail=f"Version '{version}' of module '{namespace}/{name}/{system}' already exists",
         )
 
     # Read file data
@@ -240,7 +240,7 @@ async def upload_module(
         result = await version_service.create_version(
             namespace=namespace,
             name=name,
-            provider=provider,
+            system=system,
             version=version,
             file_data=file_data,
             user_id=current_user.id,
@@ -262,7 +262,7 @@ async def upload_module(
         user_email=current_user.email,
         namespace=namespace,
         module=name,
-        provider=provider,
+        system=system,
         version=version,
         package_size_bytes=len(file_data),
     )
@@ -283,7 +283,7 @@ def _upload_response_json(result: dict[str, Any]) -> str:
             "id": str(result["id"]),
             "namespace": result["namespace"],
             "name": result["name"],
-            "provider": result["provider"],
+            "system": result["system"],
             "version": result["version"],
             "inputs": result["inputs"],
             "outputs": result["outputs"],

@@ -35,7 +35,7 @@ class ModuleVersionsEntry(BaseModel):
 
 
 class VersionsResponse(BaseModel):
-    """Response for GET /v1/modules/:namespace/:name/:provider/versions."""
+    """Response for GET /v1/modules/:namespace/:name/:system/versions."""
 
     modules: list[ModuleVersionsEntry]
 

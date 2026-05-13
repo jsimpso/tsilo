@@ -126,13 +126,13 @@ async def prometheus_metrics(
             select(
                 Namespace.name.label("namespace"),
                 Module.name.label("module_name"),
-                Module.provider,
+                Module.system,
                 func.coalesce(func.sum(DownloadMetric.download_count), 0).label("downloads"),
             )
             .outerjoin(ModuleVersion, ModuleVersion.module_id == Module.id)
             .outerjoin(DownloadMetric, DownloadMetric.version_id == ModuleVersion.id)
             .join(Namespace, Module.namespace_id == Namespace.id)
-            .group_by(Namespace.name, Module.name, Module.provider)
+            .group_by(Namespace.name, Module.name, Module.system)
         )
         mod_result = await db.execute(mod_dl_stmt)
         mod_rows = mod_result.all()
@@ -140,9 +140,7 @@ async def prometheus_metrics(
         lines.append("# HELP tsilo_module_downloads_total Total downloads per module.")
         lines.append("# TYPE tsilo_module_downloads_total gauge")
         for row in mod_rows:
-            labels = (
-                f'namespace="{row.namespace}",name="{row.module_name}",provider="{row.provider}"'
-            )
+            labels = f'namespace="{row.namespace}",name="{row.module_name}",system="{row.system}"'
             lines.append(f"tsilo_module_downloads_total{{{labels}}} {row.downloads}")
         lines.append("")
 
@@ -153,18 +151,16 @@ async def prometheus_metrics(
             select(
                 Namespace.name.label("namespace"),
                 Module.name.label("module_name"),
-                Module.provider,
+                Module.system,
                 func.count(ModuleVersion.id).label("version_count"),
             )
             .outerjoin(ModuleVersion, ModuleVersion.module_id == Module.id)
             .join(Namespace, Module.namespace_id == Namespace.id)
-            .group_by(Namespace.name, Module.name, Module.provider)
+            .group_by(Namespace.name, Module.name, Module.system)
         )
         ver_result = await db.execute(ver_count_stmt)
         for row in ver_result:
-            labels = (
-                f'namespace="{row.namespace}",name="{row.module_name}",provider="{row.provider}"'
-            )
+            labels = f'namespace="{row.namespace}",name="{row.module_name}",system="{row.system}"'
             lines.append(f"tsilo_module_versions_total{{{labels}}} {row.version_count}")
         lines.append("")
 
@@ -297,13 +293,13 @@ async def metrics_overview(
 
 
 @router.get(
-    "/api/metrics/modules/{namespace}/{name}/{provider}",
+    "/api/metrics/modules/{namespace}/{name}/{system}",
     response_model=ModuleMetricsResponse,
 )
 async def module_metrics(
     namespace: str,
     name: str,
-    provider: str,
+    system: str,
     current_user: CurrentUser = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> ModuleMetricsResponse:
@@ -319,12 +315,12 @@ async def module_metrics(
         )
 
     metrics_service = MetricsService(db)
-    data = await metrics_service.get_module_metrics(namespace, name, provider)
+    data = await metrics_service.get_module_metrics(namespace, name, system)
 
     if data is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Module '{namespace}/{name}/{provider}' not found",
+            detail=f"Module '{namespace}/{name}/{system}' not found",
         )
 
     logger.info(
@@ -332,10 +328,10 @@ async def module_metrics(
         user_id=str(current_user.id),
         namespace=namespace,
         module=name,
-        provider=provider,
+        system=system,
     )
 
     return ModuleMetricsResponse(
-        module={"namespace": namespace, "name": name, "provider": provider},
+        module={"namespace": namespace, "name": name, "system": system},
         metrics=data,
     )

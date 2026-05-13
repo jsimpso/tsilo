@@ -33,14 +33,14 @@ async def test_metrics_overview_endpoint_exists(client):
 
 @pytest.mark.asyncio
 async def test_module_metrics_requires_auth(client):
-    """GET /api/metrics/modules/:ns/:name/:provider should require authentication."""
+    """GET /api/metrics/modules/:ns/:name/:system should require authentication."""
     response = await client.get("/api/metrics/modules/platform-team/vpc/aws")
     assert response.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_module_metrics_endpoint_exists(client):
-    """GET /api/metrics/modules/:ns/:name/:provider should not return 404."""
+    """GET /api/metrics/modules/:ns/:name/:system should not return 404."""
     response = await client.get("/api/metrics/modules/platform-team/vpc/aws")
     assert response.status_code != 404
 

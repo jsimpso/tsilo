@@ -455,7 +455,7 @@ psql postgresql://tsilo:password@localhost:5432/tsilo
 \d modules
 
 # Query data
-SELECT namespace_id, name, provider FROM modules;
+SELECT namespace_id, name, system FROM modules;
 ```
 
 ### API Documentation

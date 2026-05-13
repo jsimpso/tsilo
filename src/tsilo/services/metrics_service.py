@@ -97,13 +97,13 @@ class MetricsService:
             select(
                 Namespace.name.label("namespace"),
                 Module.name.label("module_name"),
-                Module.provider,
+                Module.system,
                 func.coalesce(func.sum(DownloadMetric.download_count), 0).label("downloads"),
             )
             .join(ModuleVersion, ModuleVersion.module_id == Module.id)
             .join(DownloadMetric, DownloadMetric.version_id == ModuleVersion.id)
             .join(Namespace, Module.namespace_id == Namespace.id)
-            .group_by(Namespace.name, Module.name, Module.provider)
+            .group_by(Namespace.name, Module.name, Module.system)
             .order_by(func.sum(DownloadMetric.download_count).desc())
             .limit(10)
         )
@@ -112,7 +112,7 @@ class MetricsService:
             {
                 "namespace": row.namespace,
                 "name": row.module_name,
-                "provider": row.provider,
+                "system": row.system,
                 "downloads": row.downloads,
             }
             for row in top_result
@@ -155,7 +155,7 @@ class MetricsService:
         }
 
     async def get_module_metrics(
-        self, namespace: str, name: str, provider: str
+        self, namespace: str, name: str, system: str
     ) -> dict[str, Any] | None:
         """Get detailed metrics for a specific module.
 
@@ -170,7 +170,7 @@ class MetricsService:
             .where(
                 Namespace.name == namespace,
                 Module.name == name,
-                Module.provider == provider,
+                Module.system == system,
             )
             .options(
                 joinedload(Module.versions).joinedload(ModuleVersion.download_metric),
@@ -281,7 +281,7 @@ class MetricsService:
                 ModuleVersion.version,
                 Module.name.label("module_name"),
                 Namespace.name.label("namespace"),
-                Module.provider,
+                Module.system,
                 DownloadMetric.last_download_at,
             )
             .join(DownloadMetric, DownloadMetric.version_id == ModuleVersion.id)
@@ -299,7 +299,7 @@ class MetricsService:
                     "version": row.version,
                     "module": row.module_name,
                     "namespace": row.namespace,
-                    "provider": row.provider,
+                    "system": row.system,
                     "last_download_at": (
                         row.last_download_at.isoformat() if row.last_download_at else None
                     ),

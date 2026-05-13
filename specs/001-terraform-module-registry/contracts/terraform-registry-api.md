@@ -3,7 +3,10 @@
 **Date**: 2026-05-10
 **Phase**: 1 - Design & Contracts
 **Purpose**: Define REST API contracts for Terraform Module Registry Protocol compliance
-**Reference**: docs/registry_api.md (Terraform Module Registry Protocol specification)
+**References**:
+- docs/module_registry_protocol.md (canonical minimal Terraform Module Registry Protocol)
+- docs/registry_api.md (HCP / Terraform Registry HTTP API superset)
+- docs/login_protocol.md (Terraform CLI login protocol)
 
 ## Overview
 
@@ -205,7 +208,7 @@ Cache-Control: no-store
 
 ## Module Version Listing
 
-### GET /v1/modules/:namespace/:name/:provider/versions
+### GET /v1/modules/:namespace/:name/:system/versions
 
 **Purpose**: List all available versions for a module
 
@@ -216,7 +219,7 @@ Cache-Control: no-store
 **Path Parameters**:
 - `namespace` (string): Namespace identifier (e.g., "platform-team")
 - `name` (string): Module name (e.g., "vpc")
-- `provider` (string): Provider name (e.g., "aws")
+- `system` (string): Target system name (e.g., "aws"). Per the Terraform Module Registry Protocol this is the "remote system that the module is primarily written to target" and commonly matches a provider name.
 
 **Request**:
 ```http
@@ -313,7 +316,7 @@ X-RateLimit-Remaining: 999
 
 ## Module Download
 
-### GET /v1/modules/:namespace/:name/:provider/:version/download
+### GET /v1/modules/:namespace/:name/:system/:version/download
 
 **Purpose**: Provide download URL for a specific module version
 
@@ -324,7 +327,7 @@ X-RateLimit-Remaining: 999
 **Path Parameters**:
 - `namespace` (string): Namespace identifier
 - `name` (string): Module name
-- `provider` (string): Provider name
+- `system` (string): Target system name
 - `version` (string): Semantic version (e.g., "1.2.3")
 
 **Request**:
@@ -417,7 +420,7 @@ module.tar.gz
 
 ## Module Upload
 
-### POST /v1/modules/:namespace/:name/:provider/:version
+### POST /v1/modules/:namespace/:name/:system/:version
 
 **Purpose**: Upload a new module version
 
@@ -428,7 +431,7 @@ module.tar.gz
 **Path Parameters**:
 - `namespace` (string): Namespace identifier
 - `name` (string): Module name
-- `provider` (string): Provider name
+- `system` (string): Target system name
 - `version` (string): Semantic version
 
 **Request**:
@@ -453,7 +456,7 @@ Content-Type: application/gzip
   "id": "770e8400-e29b-41d4-a716-446655440000",
   "namespace": "platform-team",
   "name": "vpc",
-  "provider": "aws",
+  "system": "aws",
   "version": "1.2.3",
   "inputs": [
     {
@@ -685,17 +688,17 @@ Prometheus-format metrics for monitoring:
 ```text
 # HELP tsilo_requests_total Total number of HTTP requests
 # TYPE tsilo_requests_total counter
-tsilo_requests_total{method="GET",endpoint="/v1/modules/{namespace}/{name}/{provider}/versions",status="200"} 1247
+tsilo_requests_total{method="GET",endpoint="/v1/modules/{namespace}/{name}/{system}/versions",status="200"} 1247
 
 # HELP tsilo_request_duration_seconds HTTP request latency
 # TYPE tsilo_request_duration_seconds histogram
-tsilo_request_duration_seconds_bucket{method="GET",endpoint="/v1/modules/{namespace}/{name}/{provider}/versions",le="0.1"} 1200
-tsilo_request_duration_seconds_bucket{method="GET",endpoint="/v1/modules/{namespace}/{name}/{provider}/versions",le="0.5"} 1245
-tsilo_request_duration_seconds_bucket{method="GET",endpoint="/v1/modules/{namespace}/{name}/{provider}/versions",le="1.0"} 1247
+tsilo_request_duration_seconds_bucket{method="GET",endpoint="/v1/modules/{namespace}/{name}/{system}/versions",le="0.1"} 1200
+tsilo_request_duration_seconds_bucket{method="GET",endpoint="/v1/modules/{namespace}/{name}/{system}/versions",le="0.5"} 1245
+tsilo_request_duration_seconds_bucket{method="GET",endpoint="/v1/modules/{namespace}/{name}/{system}/versions",le="1.0"} 1247
 
 # HELP tsilo_module_downloads_total Total number of module downloads
 # TYPE tsilo_module_downloads_total counter
-tsilo_module_downloads_total{namespace="platform-team",module="vpc",provider="aws"} 523
+tsilo_module_downloads_total{namespace="platform-team",module="vpc",system="aws"} 523
 
 # HELP tsilo_active_sessions Current number of active user sessions
 # TYPE tsilo_active_sessions gauge

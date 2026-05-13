@@ -201,7 +201,7 @@ async def test_upload_success_returns_201(client, mock_auth, mock_db):
                 "module_id": module_id,
                 "namespace": "platform-team",
                 "name": "vpc",
-                "provider": "aws",
+                "system": "aws",
                 "version": "1.0.0",
                 "inputs": [
                     {"name": "name", "type": "string", "description": "The name", "required": True}
@@ -223,7 +223,7 @@ async def test_upload_success_returns_201(client, mock_auth, mock_db):
             data = response.json()
             assert data["namespace"] == "platform-team"
             assert data["name"] == "vpc"
-            assert data["provider"] == "aws"
+            assert data["system"] == "aws"
             assert data["version"] == "1.0.0"
             assert "inputs" in data
             assert "outputs" in data

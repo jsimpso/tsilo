@@ -72,14 +72,14 @@ class VersionService:
     def __init__(self, db: AsyncSession) -> None:
         self._db = db
 
-    async def list_versions(self, namespace: str, name: str, provider: str) -> list[str] | None:
+    async def list_versions(self, namespace: str, name: str, system: str) -> list[str] | None:
         """List all versions for a module in descending semantic version order.
 
         Returns None if the module does not exist.
         Returns an empty list if the module exists but has no versions.
         Results are cached for 5 minutes.
         """
-        cache_key = f"versions:{namespace}/{name}/{provider}"
+        cache_key = f"versions:{namespace}/{name}/{system}"
         cached = module_cache.get(cache_key)
         if cached is not None:
             return list(cached)
@@ -91,7 +91,7 @@ class VersionService:
             .where(
                 Namespace.name == namespace,
                 Module.name == name,
-                Module.provider == provider,
+                Module.system == system,
             )
         )
         result = await self._db.execute(stmt)
@@ -102,7 +102,7 @@ class VersionService:
                 "module_not_found",
                 namespace=namespace,
                 name=name,
-                provider=provider,
+                system=system,
             )
             return None
 
@@ -121,13 +121,13 @@ class VersionService:
             "versions_listed",
             namespace=namespace,
             name=name,
-            provider=provider,
+            system=system,
             count=len(versions),
         )
         return versions
 
     async def get_version(
-        self, namespace: str, name: str, provider: str, version: str
+        self, namespace: str, name: str, system: str, version: str
     ) -> dict[str, Any] | None:
         """Get a specific module version.
 
@@ -141,7 +141,7 @@ class VersionService:
             .where(
                 Namespace.name == namespace,
                 Module.name == name,
-                Module.provider == provider,
+                Module.system == system,
                 ModuleVersion.version == version,
             )
             .options(joinedload(ModuleVersion.module))
@@ -154,7 +154,7 @@ class VersionService:
                 "version_not_found",
                 namespace=namespace,
                 name=name,
-                provider=provider,
+                system=system,
                 version=version,
             )
             return None
@@ -174,7 +174,7 @@ class VersionService:
         return SEMVER_PATTERN.match(version) is not None
 
     async def check_version_exists(
-        self, namespace: str, name: str, provider: str, version: str
+        self, namespace: str, name: str, system: str, version: str
     ) -> bool:
         """Check if a specific module version already exists."""
         stmt = (
@@ -184,7 +184,7 @@ class VersionService:
             .where(
                 Namespace.name == namespace,
                 Module.name == name,
-                Module.provider == provider,
+                Module.system == system,
                 ModuleVersion.version == version,
             )
         )
@@ -195,7 +195,7 @@ class VersionService:
         self,
         namespace: str,
         name: str,
-        provider: str,
+        system: str,
         version: str,
         file_data: bytes,
         user_id: uuid.UUID,
@@ -228,13 +228,11 @@ class VersionService:
         checksum = hashlib.sha256(file_data).hexdigest()
 
         # Find or create module record
-        module = await self._get_or_create_module(namespace, name, provider)
+        module = await self._get_or_create_module(namespace, name, system)
 
         # Upload to S3
         storage = StorageService()
-        package_url = storage.upload_module(
-            namespace, name, provider, version, file_data, checksum
-        )
+        package_url = storage.upload_module(namespace, name, system, version, file_data, checksum)
 
         # Create ModuleVersion record
         now = datetime.now(tz=UTC)
@@ -263,13 +261,13 @@ class VersionService:
         await self._db.flush()
 
         # Invalidate cached version list for this module
-        module_cache.invalidate(f"versions:{namespace}/{name}/{provider}")
+        module_cache.invalidate(f"versions:{namespace}/{name}/{system}")
 
         logger.info(
             "version_created",
             namespace=namespace,
             name=name,
-            provider=provider,
+            system=system,
             version=version,
             package_size_bytes=len(file_data),
             checksum_sha256=checksum,
@@ -281,7 +279,7 @@ class VersionService:
             "module_id": module.id,
             "namespace": namespace,
             "name": name,
-            "provider": provider,
+            "system": system,
             "version": version,
             "inputs": metadata["inputs"],
             "outputs": metadata["outputs"],
@@ -291,7 +289,7 @@ class VersionService:
             "published_at": now.isoformat(),
         }
 
-    async def _get_or_create_module(self, namespace: str, name: str, provider: str) -> Module:
+    async def _get_or_create_module(self, namespace: str, name: str, system: str) -> Module:
         """Get an existing module or create a new one."""
         # Find namespace
         ns_stmt = select(Namespace).where(Namespace.name == namespace)
@@ -305,7 +303,7 @@ class VersionService:
         mod_stmt = select(Module).where(
             Module.namespace_id == ns.id,
             Module.name == name,
-            Module.provider == provider,
+            Module.system == system,
         )
         mod_result = await self._db.execute(mod_stmt)
         module = mod_result.scalar_one_or_none()
@@ -314,7 +312,7 @@ class VersionService:
             module = Module(
                 namespace_id=ns.id,
                 name=name,
-                provider=provider,
+                system=system,
             )
             self._db.add(module)
             await self._db.flush()
@@ -322,7 +320,7 @@ class VersionService:
                 "module_created",
                 namespace=namespace,
                 name=name,
-                provider=provider,
+                system=system,
             )
 
         return module
