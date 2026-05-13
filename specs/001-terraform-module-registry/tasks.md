@@ -130,21 +130,21 @@
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T058 [P] [US3] Contract test for module upload in tests/contract/test_module_upload.py: verify multipart upload, version validation, duplicate rejection, permission enforcement
-- [ ] T059 [P] [US3] Integration test for upload-download cycle in tests/integration/test_upload_download.py: upload module, verify S3 storage, download via Terraform CLI
+- [x] T058 [P] [US3] Contract test for module upload in tests/contract/test_module_upload.py: verify multipart upload, version validation, duplicate rejection, permission enforcement
+- [x] T059 [P] [US3] Integration test for upload-download cycle in tests/integration/test_upload_download.py: upload module, verify S3 storage, download via Terraform CLI
 
 ### Implementation for User Story 3
 
-- [ ] T060 [P] [US3] Create Terraform module parser in src/tsilo/services/module_parser.py: extract inputs from variables.tf, extract outputs from outputs.tf, extract README.md
-- [ ] T061 [US3] Implement module upload endpoint in src/tsilo/api/registry.py: POST /v1/modules/:namespace/:name/:provider/:version with multipart file upload
-- [ ] T062 [US3] Create module version service methods in src/tsilo/services/version_service.py: create_version, validate_semver, check_version_exists, parse_module_package
-- [ ] T063 [US3] Implement package validation: verify .tar.gz format, check for .tf files, validate Terraform syntax, check size limit (100MB)
-- [ ] T064 [US3] Integrate S3 upload: upload to s3://bucket/:namespace/:name/:provider/:version/module.tar.gz with server-side encryption
-- [ ] T065 [US3] Calculate and store SHA256 checksum during upload for package integrity
-- [ ] T066 [US3] Create DownloadMetric record initialized to 0 when ModuleVersion created
-- [ ] T067 [US3] Add detailed validation error responses: which file failed, what syntax error, actionable guidance
-- [ ] T068 [P] [US3] Create module upload form in web UI: namespace selector, module name/provider input, version input, file upload, validation feedback
-- [ ] T069 [US3] Add module upload JavaScript in src/tsilo/static/js/upload.js: file validation, progress indicator, error display, success confirmation
+- [x] T060 [P] [US3] Create Terraform module parser in src/tsilo/services/module_parser.py: extract inputs from variables.tf, extract outputs from outputs.tf, extract README.md
+- [x] T061 [US3] Implement module upload endpoint in src/tsilo/api/registry.py: POST /v1/modules/:namespace/:name/:provider/:version with multipart file upload
+- [x] T062 [US3] Create module version service methods in src/tsilo/services/version_service.py: create_version, validate_semver, check_version_exists, parse_module_package
+- [x] T063 [US3] Implement package validation: verify .tar.gz format, check for .tf files, validate Terraform syntax, check size limit (100MB)
+- [x] T064 [US3] Integrate S3 upload: upload to s3://bucket/:namespace/:name/:provider/:version/module.tar.gz with server-side encryption
+- [x] T065 [US3] Calculate and store SHA256 checksum during upload for package integrity
+- [x] T066 [US3] Create DownloadMetric record initialized to 0 when ModuleVersion created
+- [x] T067 [US3] Add detailed validation error responses: which file failed, what syntax error, actionable guidance
+- [x] T068 [P] [US3] Create module upload form in web UI: namespace selector, module name/provider input, version input, file upload, validation feedback
+- [x] T069 [US3] Add module upload JavaScript in src/tsilo/static/js/upload.js: file validation, progress indicator, error display, success confirmation
 
 **Checkpoint**: Module authors can upload new modules and versions; modules immediately available for download
 
