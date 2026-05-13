@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <title>Namespaces - Tsilo</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav-container">
+            <a href="/" class="nav-logo">Tsilo</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Modules</a>
+                <a href="/upload" class="nav-link">Upload</a>
+                <a href="/namespaces" class="nav-link nav-link-active">Namespaces</a>
+            </div>
+            <div class="nav-auth" id="nav-auth">
+                <a href="/auth/login" class="btn btn-primary btn-sm">Sign In</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="namespaces-section">
+            <div class="section-header">
+                <h1>Namespaces</h1>
+                <button id="create-ns-btn" class="btn btn-primary" hidden>
+                    Create Namespace
+                </button>
+            </div>
+
+            <div id="namespaces-list" class="namespaces-grid">
+                <div class="loading-indicator" id="loading">
+                    <div class="spinner" role="status">
+                        <span class="sr-only">Loading namespaces...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Create Namespace Modal -->
+        <div id="create-ns-modal" class="modal" hidden>
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create Namespace</h2>
+                    <button class="modal-close" aria-label="Close">&times;</button>
+                </div>
+                <form id="create-ns-form">
+                    <div class="form-group">
+                        <label for="ns-name" class="form-label">Name</label>
+                        <input
+                            type="text"
+                            id="ns-name"
+                            class="text-input"
+                            placeholder="e.g., platform-team"
+                            pattern="^[a-z0-9][a-z0-9-]*[a-z0-9]$"
+                            minlength="2"
+                            maxlength="100"
+                            required
+                            autocomplete="off"
+                        >
+                        <span class="form-help">Lowercase alphanumeric with hyphens, 2-100 characters.</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="ns-display-name" class="form-label">Display Name</label>
+                        <input
+                            type="text"
+                            id="ns-display-name"
+                            class="text-input"
+                            placeholder="e.g., Platform Engineering Team"
+                            maxlength="200"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <div class="form-group">
+                        <label for="ns-description" class="form-label">Description</label>
+                        <textarea
+                            id="ns-description"
+                            class="text-input"
+                            placeholder="Brief description of this namespace..."
+                            rows="3"
+                        ></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Permissions Modal -->
+        <div id="permissions-modal" class="modal" hidden>
+            <div class="modal-backdrop"></div>
+            <div class="modal-content modal-wide">
+                <div class="modal-header">
+                    <h2>Permissions: <span id="perm-ns-name"></span></h2>
+                    <button class="modal-close" aria-label="Close">&times;</button>
+                </div>
+                <div id="permissions-list" class="permissions-list">
+                    <div class="loading-indicator">
+                        <div class="spinner" role="status">
+                            <span class="sr-only">Loading permissions...</span>
+                        </div>
+                    </div>
+                </div>
+                <form id="add-perm-form" class="add-perm-form" hidden>
+                    <h3>Add Permission</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="perm-group" class="form-label">Group Name</label>
+                            <input
+                                type="text"
+                                id="perm-group"
+                                class="text-input"
+                                placeholder="e.g., platform-team-devs"
+                                required
+                                autocomplete="off"
+                            >
+                        </div>
+                        <div class="form-group">
+                            <label for="perm-level" class="form-label">Level</label>
+                            <select id="perm-level" class="select-input" required>
+                                <option value="read">Read</option>
+                                <option value="write">Write</option>
+                            </select>
+                        </div>
+                        <div class="form-group form-group-action">
+                            <button type="submit" class="btn btn-primary btn-sm">Add</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="error-message" class="error-banner" hidden></div>
+    </main>
+
+    <footer class="site-footer">
+        <p>Tsilo &mdash; Private Terraform Module Registry</p>
+    </footer>
+
+    <script src="/static/js/namespaces.js"></script>
+</body>
+</html>

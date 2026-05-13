@@ -214,3 +214,9 @@ async def module_detail_page(namespace: str, name: str, provider: str, version: 
 async def upload_page():
     """Serve the module upload page."""
     return FileResponse(STATIC_DIR / "upload.html", media_type="text/html")
+
+
+@app.get("/namespaces", include_in_schema=False)
+async def namespaces_page():
+    """Serve the namespace management page."""
+    return FileResponse(STATIC_DIR / "namespaces.html", media_type="text/html")
