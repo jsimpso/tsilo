@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="">
+    <title>API Tokens - Tsilo</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav-container">
+            <a href="/" class="nav-logo">Tsilo</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">Modules</a>
+                <a href="/upload" class="nav-link">Upload</a>
+                <a href="/namespaces" class="nav-link">Namespaces</a>
+                <a href="/tokens" class="nav-link nav-link-active">Tokens</a>
+            </div>
+            <div class="nav-auth" id="nav-auth">
+                <a href="/auth/login" class="btn btn-primary btn-sm">Sign In</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <section class="tokens-section">
+            <div class="section-header">
+                <h1>API Tokens</h1>
+                <button id="create-token-btn" class="btn btn-primary">
+                    Create Token
+                </button>
+            </div>
+
+            <p class="section-description">
+                API tokens allow CI/CD pipelines and automation tools to authenticate with the registry.
+                You can also use <code>terraform login</code> to generate tokens automatically.
+            </p>
+
+            <div id="error-message" class="alert alert-error" hidden></div>
+
+            <div id="token-created-banner" class="alert alert-success" hidden>
+                <strong>Token created!</strong>
+                <p>Copy your token now. You won't be able to see it again.</p>
+                <div class="token-display">
+                    <code id="new-token-value" class="token-value"></code>
+                    <button id="copy-token-btn" class="btn btn-secondary btn-sm">Copy</button>
+                </div>
+            </div>
+
+            <div id="tokens-list" class="tokens-table-container">
+                <div class="loading-indicator" id="loading">
+                    <div class="spinner" role="status">
+                        <span class="sr-only">Loading tokens...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Create Token Modal -->
+        <div id="create-token-modal" class="modal" hidden>
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create API Token</h2>
+                    <button class="modal-close" aria-label="Close">&times;</button>
+                </div>
+                <form id="create-token-form" class="modal-body">
+                    <div class="form-group">
+                        <label for="token-name" class="form-label">Token Name</label>
+                        <input
+                            type="text"
+                            id="token-name"
+                            class="text-input"
+                            placeholder="e.g., CI/CD Pipeline - Production"
+                            required
+                            maxlength="200"
+                            autocomplete="off"
+                        >
+                        <span class="form-help">A descriptive name for this token.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="token-expiry" class="form-label">Expires In (days)</label>
+                        <input
+                            type="number"
+                            id="token-expiry"
+                            class="text-input"
+                            placeholder="365 (leave empty for no expiry)"
+                            min="1"
+                            max="3650"
+                            autocomplete="off"
+                        >
+                        <span class="form-help">Number of days before the token expires. Leave empty for no expiry.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Namespace Permissions</label>
+                        <div id="scope-list" class="scope-list">
+                            <p class="form-help">Loading namespaces...</p>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Token</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/tokens.js"></script>
+</body>
+</html>

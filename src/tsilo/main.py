@@ -225,3 +225,9 @@ async def upload_page():
 async def namespaces_page():
     """Serve the namespace management page."""
     return FileResponse(STATIC_DIR / "namespaces.html", media_type="text/html")
+
+
+@app.get("/tokens", include_in_schema=False)
+async def tokens_page():
+    """Serve the API token management page."""
+    return FileResponse(STATIC_DIR / "tokens.html", media_type="text/html")
