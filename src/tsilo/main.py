@@ -185,11 +185,13 @@ async def csrf_protection(request: Request, call_next):
 from tsilo.api.auth import router as auth_router  # noqa: E402
 from tsilo.api.metrics import router as metrics_router  # noqa: E402
 from tsilo.api.modules import router as modules_router  # noqa: E402
+from tsilo.api.namespaces import router as namespaces_router  # noqa: E402
 from tsilo.api.registry import router as registry_router  # noqa: E402
 
 app.include_router(auth_router)
 app.include_router(metrics_router)
 app.include_router(modules_router)
+app.include_router(namespaces_router)
 app.include_router(registry_router)
 
 STATIC_DIR = Path("src/tsilo/static")

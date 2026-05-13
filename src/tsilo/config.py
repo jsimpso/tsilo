@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     # Security
     secret_key: str = Field(default="change-me-in-production", alias="SECRET_KEY")
     csrf_secret_key: str = Field(default="change-me-in-production", alias="CSRF_SECRET_KEY")
+    admin_group: str = Field(default="tsilo-admins", alias="ADMIN_GROUP")
 
     # Logging
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
