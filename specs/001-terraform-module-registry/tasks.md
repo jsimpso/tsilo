@@ -186,28 +186,28 @@
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T082 [P] [US5] Contract test for OAuth authorization in tests/contract/test_oauth_authorization.py: verify authorization endpoint redirect, state parameter, PKCE challenge
-- [ ] T083 [P] [US5] Contract test for OAuth token exchange in tests/contract/test_oauth_token.py: verify code verifier validation, token issuance, error cases
-- [ ] T084 [P] [US5] Integration test for Terraform CLI login in tests/integration/test_terraform_login.py: full OAuth flow with PKCE, verify token works for module download
-- [ ] T085 [P] [US5] Integration test for API token authentication in tests/integration/test_api_token_auth.py: create token, use in Terraform CLI credentials, download module
+- [x] T082 [P] [US5] Contract test for OAuth authorization in tests/contract/test_oauth_authorization.py: verify authorization endpoint redirect, state parameter, PKCE challenge
+- [x] T083 [P] [US5] Contract test for OAuth token exchange in tests/contract/test_oauth_token.py: verify code verifier validation, token issuance, error cases
+- [x] T084 [P] [US5] Integration test for Terraform CLI login in tests/integration/test_terraform_login.py: full OAuth flow with PKCE, verify token works for module download
+- [x] T085 [P] [US5] Integration test for API token authentication in tests/integration/test_api_token_auth.py: create token, use in Terraform CLI credentials, download module
 
 ### Implementation for User Story 5
 
-- [ ] T086 [P] [US5] Create Pydantic schemas for OAuth in src/tsilo/schemas/oauth.py: AuthorizationRequest, TokenRequest, TokenResponse, PKCE validation
-- [ ] T087 [P] [US5] Create Pydantic schemas for API tokens in src/tsilo/schemas/api_token.py: TokenCreate, TokenResponse with scopes
-- [ ] T088 [US5] Update service discovery endpoint in src/tsilo/api/registry.py: add login.v1 configuration with OAuth endpoints and ports [10000, 10010]
-- [ ] T089 [US5] Implement OAuth authorization endpoint in src/tsilo/api/auth.py: GET /oauth/authorization with PKCE code_challenge, redirect to login, prompt user approval
-- [ ] T090 [US5] Create OAuth service in src/tsilo/services/oauth_service.py: generate_authorization_code, validate_pkce_challenge, store_auth_code with expiration (10 min)
-- [ ] T091 [US5] Implement OAuth token endpoint in src/tsilo/api/auth.py: POST /oauth/token with code_verifier validation, single-use code enforcement
-- [ ] T092 [US5] Implement PKCE validation in OAuth service: compute SHA256(code_verifier), compare to stored code_challenge, reject mismatch
-- [ ] T093 [US5] Create APIToken on successful OAuth exchange: no expiration (expires_in: null), include user's namespace permissions in scopes
-- [ ] T094 [US5] Implement API token listing endpoint in src/tsilo/api/tokens.py: GET /api/tokens (user's tokens only)
-- [ ] T095 [US5] Implement API token creation endpoint in src/tsilo/api/tokens.py: POST /api/tokens with namespace scopes, return token_value (once only)
-- [ ] T096 [US5] Create token service in src/tsilo/services/token_service.py: generate_token (cryptographically random), hash_token (SHA256), validate_token_scopes
-- [ ] T097 [US5] Implement API token revocation endpoint in src/tsilo/api/tokens.py: DELETE /api/tokens/:id (set revoked_at timestamp)
-- [ ] T098 [US5] Update authentication middleware to support Bearer tokens from API tokens and OAuth
-- [ ] T099 [US5] Create OAuth authorization code cleanup job: delete expired/used codes hourly (expires_at < NOW() - 24h OR used_at < NOW() - 7d)
-- [ ] T100 [P] [US5] Create API token management UI in web UI: list tokens, create token with scope selection, revoke tokens, display token value once with warning
+- [x] T086 [P] [US5] Create Pydantic schemas for OAuth in src/tsilo/schemas/oauth.py: AuthorizationRequest, TokenRequest, TokenResponse, PKCE validation
+- [x] T087 [P] [US5] Create Pydantic schemas for API tokens in src/tsilo/schemas/api_token.py: TokenCreate, TokenResponse with scopes
+- [x] T088 [US5] Update service discovery endpoint in src/tsilo/api/registry.py: add login.v1 configuration with OAuth endpoints and ports [10000, 10010]
+- [x] T089 [US5] Implement OAuth authorization endpoint in src/tsilo/api/auth.py: GET /oauth/authorization with PKCE code_challenge, redirect to login, prompt user approval
+- [x] T090 [US5] Create OAuth service in src/tsilo/services/oauth_service.py: generate_authorization_code, validate_pkce_challenge, store_auth_code with expiration (10 min)
+- [x] T091 [US5] Implement OAuth token endpoint in src/tsilo/api/auth.py: POST /oauth/token with code_verifier validation, single-use code enforcement
+- [x] T092 [US5] Implement PKCE validation in OAuth service: compute SHA256(code_verifier), compare to stored code_challenge, reject mismatch
+- [x] T093 [US5] Create APIToken on successful OAuth exchange: no expiration (expires_in: null), include user's namespace permissions in scopes
+- [x] T094 [US5] Implement API token listing endpoint in src/tsilo/api/tokens.py: GET /api/tokens (user's tokens only)
+- [x] T095 [US5] Implement API token creation endpoint in src/tsilo/api/tokens.py: POST /api/tokens with namespace scopes, return token_value (once only)
+- [x] T096 [US5] Create token service in src/tsilo/services/token_service.py: generate_token (cryptographically random), hash_token (SHA256), validate_token_scopes
+- [x] T097 [US5] Implement API token revocation endpoint in src/tsilo/api/tokens.py: DELETE /api/tokens/:id (set revoked_at timestamp)
+- [x] T098 [US5] Update authentication middleware to support Bearer tokens from API tokens and OAuth
+- [x] T099 [US5] Create OAuth authorization code cleanup job: delete expired/used codes hourly (expires_at < NOW() - 24h OR used_at < NOW() - 7d)
+- [x] T100 [P] [US5] Create API token management UI in web UI: list tokens, create token with scope selection, revoke tokens, display token value once with warning
 
 **Checkpoint**: CI/CD pipelines can authenticate with API tokens; Terraform CLI login via OAuth 2.0 + PKCE works
 
