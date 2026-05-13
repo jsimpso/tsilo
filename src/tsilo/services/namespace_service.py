@@ -30,9 +30,7 @@ class NamespaceService:
             .join(NamespacePermission, NamespacePermission.namespace_id == Namespace.id)
             .where(
                 NamespacePermission.group_name.in_(user.groups),
-                NamespacePermission.permission_level.in_(
-                    [PermissionLevel.READ, PermissionLevel.WRITE]
-                ),
+                NamespacePermission.permission_level.in_([PermissionLevel.READ, PermissionLevel.WRITE]),
             )
             .distinct()
             .options(joinedload(Namespace.permissions))
@@ -43,9 +41,7 @@ class NamespaceService:
         items = []
         for ns in namespaces:
             # Count modules in this namespace
-            count_stmt = select(func.count()).select_from(Module).where(
-                Module.namespace_id == ns.id
-            )
+            count_stmt = select(func.count()).select_from(Module).where(Module.namespace_id == ns.id)
             count_result = await self._db.execute(count_stmt)
             module_count = count_result.scalar() or 0
 
@@ -82,9 +78,7 @@ class NamespaceService:
         Raises ValueError if namespace name already exists.
         """
         # Check for duplicate name
-        existing = await self._db.execute(
-            select(Namespace).where(Namespace.name == name)
-        )
+        existing = await self._db.execute(select(Namespace).where(Namespace.name == name))
         if existing.scalar_one_or_none() is not None:
             raise ValueError(f"Namespace '{name}' already exists")
 
@@ -109,7 +103,5 @@ class NamespaceService:
 
     async def get_namespace_by_name(self, name: str) -> Namespace | None:
         """Get a namespace by its name."""
-        result = await self._db.execute(
-            select(Namespace).where(Namespace.name == name)
-        )
+        result = await self._db.execute(select(Namespace).where(Namespace.name == name))
         return result.scalar_one_or_none()
